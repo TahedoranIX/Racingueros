@@ -3,7 +3,7 @@ Cuentarevoluciones hecho con RPi zero W con pantalla lcd 16x2 y funciona mediant
 
 Modelos stl de la caja en carpeta **Modelos**
 
-### Conexiones
+### Conexiones:
 
 
 ### Productos:
