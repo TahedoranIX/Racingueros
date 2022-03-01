@@ -21,22 +21,20 @@ lcd = Adafruit_CharLCD(rs=25,en=24,d4=23,d5=18,d6=15,d7=14,cols=16,lines=2)
 def connection(ports):
     try:
         c = obd.OBD(ports, fast=False, timeout=30)
-        while not (c.is_connected()):
-            return obd.OBDstatus.NOT_CONNECTED,BAD_OBD
-        return c,OBD_OK
+        while not c.is_connected():
+            c = obd.OBD(ports, fast=False, timeout=30)
+        return c
     except:
         lcd.clear()
         lcd.message("No Conectado")
-        return obd.OBDStatus.NOT_CONNECTED,BAD_OBD
+        c = connection(ports)
+        return c
 
 #BASIC STAGE OF CONNECTION
 def fStage():
     #if obd not connected, keep trying until it is
-    c,var = connection(ports)
-    while var == BAD_OBD:
-        c,var = connection(ports)
         #lcd.message('\nReloj: '+t.strftime("%H:%M",t.localtime()))
-    return c
+    return connection(ports)
 
 ######################
 ###PROGRAM
