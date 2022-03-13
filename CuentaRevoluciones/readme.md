@@ -15,3 +15,6 @@ Modelos stl de la caja en carpeta **Modelos**
 
 ### Pruebas:
 - [OBD VIRTUAL](https://github.com/Ircama/ELM327-emulator)
+
+### Raspberry AP:
+- [raspberry](https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-routed-wireless-access-point)
