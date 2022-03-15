@@ -35,13 +35,13 @@ def connection(ports):
 
 #BASIC STAGE OF CONNECTION
 def fStage():
-    #if obd not connected, keep trying until it is
-    c,var = connection(ports)
-    while var == BAD_OBD:
-        t.sleep(1)
-        c,var = connection(ports)
-        #lcd.message('\nReloj: '+t.strftime("%H:%M",t.localtime()))
-    return c
+	#if obd not connected, keep trying until it is
+	c,var = connection(ports)
+	while var == BAD_OBD:
+		t.sleep(1)
+		c,var = connection(ports)
+		#lcd.message('\nReloj: '+t.strftime("%H:%M",t.localtime()))
+	return c
 
 
 ######################
