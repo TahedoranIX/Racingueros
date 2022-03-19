@@ -1,4 +1,4 @@
-from classCar import Smart
+from CarLibrary.classCar import Smart
 from time import sleep
 
 MINIMUM_SPEED = 5
