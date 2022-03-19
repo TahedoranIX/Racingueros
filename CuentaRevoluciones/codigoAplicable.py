@@ -2,17 +2,12 @@ import time as t
 from OBDLibrary.PosibleNueva.obd import obd
 from LCDLibrary.lcdLibrary import LCD
 
-#CONSTANTS
-BAD_OBD = 2
-OBD_OK = 1
-VAR = 2
-
 #DEBUG
 #obd.logger.setLevel(obd.logging.DEBUG)
 
 #port assigned obd
-#ports = "/dev/rfcomm99"
-ports = "/dev/pts/2"
+ports = "/dev/rfcomm99"
+#ports = "/dev/pts/2"
 
 
 #CONNECT TO OBD
