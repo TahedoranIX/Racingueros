@@ -15,126 +15,153 @@ p.stop()
 
 LOW_TIME = 0.000040
 HIGH_TIME = 0.00153
+GPIO.setwarnings(False)
 
 class LCD:
     def __init__(self, d4, d5, d6, d7, en, rs):
-        #DEFINICIÓN DE PINES
+        '''Pin set and LCD init'''
+
+        #######################
+        # pin assignment
+        #######################
         GPIO.setmode(GPIO.BCM)
-        self.datas = [d7,d6,d5,d4]
-        self.en = en
-        self.rs = rs
+        self.__datas = [d7,d6,d5,d4]
+        self.__en = en
+        self.__rs = rs
         for pin in (rs, en, d4, d5, d6, d7):
             GPIO.setup(pin, GPIO.OUT)
          
-        '''BEGIN INIT''' 
+        #######################
+        # begin INIT
+        #######################
         GPIO.output(en, 0)
         
         #function set1
         GPIO.output(rs, 0)
-        GPIO.output(self.datas, (0,0,1,1))
-        self.enviar()
+        GPIO.output(self.__datas, (0,0,1,1))
+        self.__enviar()
         sleep(LOW_TIME)
-        
         #function set2
-        self.functionSet()
+        self.__functionSet()
         #function set3
-        self.functionSet()
+        self.__functionSet()
         #display on
-        self.display(1,1,1)
+        self.display()
         #clear
         self.clearDisplay()
-        
         #entry mode
-        GPIO.output(rs, 0)
-        GPIO.output(self.datas, (0,0,0,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        GPIO.output(self.datas, (0,1,1,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        sleep(LOW_TIME)
+        self.__entryMode()
+
+        #######################
+        # end INIT
+        #######################
         
-        '''END INIT'''
-        
-    def enviar(self):
-        GPIO.output(self.en, 1)
-        GPIO.output(self.en, 0)
-        
-    def functionSet(self):
-        GPIO.output(self.rs, 0)
-        GPIO.output(self.datas, (0,0,1,0))
-        self.enviar()
-        GPIO.output(self.datas, (1,0,0,0))
-        self.enviar()
-        sleep(LOW_TIME)
-                
+    def __enviar(self):
+        ''' Trigger PIN ENABLE'''
+        GPIO.output(self.__en, 1)
+        GPIO.output(self.__en, 0)
+
+    def __sendCommand(self, rs, data, time):
+        ''' SendCommand to LCD
+
+            :arg rs: Pin RS (instruction/data register)
+            :arg data: 8bit list data.
+            :arg time: HIGH_TIME/LOW_TIME
+        '''
+        GPIO.output(self.__rs, rs)
+        GPIO.output(self.__datas, data[:4])
+        self.__enviar()
+        GPIO.output(self.__datas, data[4:])
+        self.__enviar()
+        sleep(time)
+
+    def __functionSet(self):
+        ''' Set bit mode LCD, only used in init'''
+        self.__sendCommand(rs=0, data=[0,0,1,0,1,0,0,0], time=LOW_TIME)
+
+    def __setCGRAM(self, address):
+        ''' Set CGRAM address to AC (custom chars)
+
+            :args address: 6bit Address(5-0)
+        '''
+        self.__sendCommand(rs=0, data=[0,1,address[0],address[1],address[2],address[3],address[4],address[5]], time=LOW_TIME)
+
+    def __setDDRAM(self, address):
+        ''' Set DDRAM addresss to AC ('\ n' for example)
+
+            :args address: 7bit Address(6-0)
+        '''
+        self.__sendCommand(rs=0, data=[1,address[0],address[1],address[2],address[3],address[4],address[5],address[6]], time=LOW_TIME)
+
+    def __writeRAM(self, data):
+        '''  Write data in RAM, show chars.
+
+        :args data: 8bit data package.
+        '''
+        self.__sendCommand(rs=1, data=data, time=LOW_TIME)
+
+    def __entryMode(self,cursor=1,display=0):
+        ''' Set moving direction of cursor and display.
+
+            :arg cursor: set orientation of cursor
+            :arg display: shift entire display
+        '''
+        self.__sendCommand(rs=0, data=[0,0,0,0,0,1,cursor,display], time=LOW_TIME)
+
     def clearDisplay(self):
-        GPIO.output(self.rs, 0)
-        GPIO.output(self.datas, (0,0,0,0))
-        self.enviar()
-        GPIO.output(self.datas, (0,0,0,1))
-        self.enviar()
-        sleep(0.002)
+        ''' Clear all display data'''
+        self.__sendCommand(rs=0, data=[0,0,0,0,0,0,0,1], time=HIGH_TIME)
         
     def home(self):
-        GPIO.output(self.rs, 0)
-        GPIO.output(self.datas, (0,0,0,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        GPIO.output(self.datas, (0,0,1,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        sleep(HIGH_TIME)
+        ''' Return cursor to home'''
+        self.__sendCommand(rs=0, data=[0,0,0,0,0,0,1,0], time=HIGH_TIME)
+
+    def display(self, display=1, cursor=0, blink=0):
+
+        '''View options
+
+            :arg display: Show messages in display
+            :arg cursor: Show cursor
+            :arg blink: Show blinking cursor
+        '''
+        self.__sendCommand(rs=0, data=[0,0,0,0,1,display,cursor,blink], time=LOW_TIME)
+
+    def moveCursor(self, cursor=0, direction=1, times=1):
+        '''
+        View options
+
+            :arg cursor: Shift cursor(0) display(1)
+            :arg direction: Direction right(1) left(0)
+            :arg times: Times to move
+        '''
+        for i in range(times):
+            self.__sendCommand(rs=0, data=[0,0,0,1,cursor,direction,0,0], time=LOW_TIME)
     
     def textLeftRight(self):
-        GPIO.output(self.rs, 0)
-        GPIO.output(self.datas, (0,0,0,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        GPIO.output(self.datas, (0,1,1,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        sleep(LOW_TIME)
+        ''' Writes to the right (Normal)'''
+
+        self.__sendCommand(rs=0, data=[0,0,0,0,0,1,1,0], time=LOW_TIME)
         
     def textRightLeft(self):
-        GPIO.output(self.rs, 0)
-        GPIO.output(self.datas, (0,0,0,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        GPIO.output(self.datas, (0,1,0,0))
-        GPIO.output(en, 1)
-        GPIO.output(en, 0)
-        sleep(LOW_TIME)
-    
-    def display(self, display, cursor, blink):
-        GPIO.output(self.rs, 0)
-        GPIO.output(self.datas, (0,0,0,0))
-        self.enviar()
-        GPIO.output(self.datas, (1,display,cursor,blink))
-        self.enviar()
-        sleep(LOW_TIME)
-        
-    def moveCursor(self,direction):
-        pass
-    
+        ''' Writes to the left ¿?'''
+        self.__sendCommand(rs=0, data=[0,0,0,0,0,1,0,0], time=LOW_TIME)
+
     def writeMessage(self, message):
+        '''Write message in display '''
         for char in message:
-            highPos = []
-            lowPos = []
-            letra = bin(ord(char))[2:].zfill(8)
-            for binario in letra[:4]:
-                highPos.append(int(binario))
-            for binario in letra[4:]:
-                lowPos.append(int(binario))
-                
-            GPIO.output(self.rs, 1)
-            GPIO.output(self.datas, highPos)
-            self.enviar()
-            GPIO.output(self.datas, lowPos)
-            self.enviar()
-            sleep(LOW_TIME)
+            if char == '\n':
+                self.__setDDRAM([1,0,0,0,0,0,0])
+            else:
+                dataMessage = []
+                letra = bin(ord(char))[2:].zfill(8)
+                for binario in letra:
+                    dataMessage.append(int(binario))
+                self.__writeRAM(dataMessage)
         
 
-prueba = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)
-prueba.writeMessage("hola que tal")
+h = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)
+h.writeMessage("hola que tal\nyo bien")
+h.writeMessage("perro")
+h.home()
+h.clearDisplay()
 GPIO.cleanup()
