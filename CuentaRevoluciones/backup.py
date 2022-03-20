@@ -1,6 +1,6 @@
 import time as t
-import obd
-from Adafruit_CharLCD import Adafruit_CharLCD
+from OBDLibrary.PosibleNueva.obd import obd
+from Adafruit_CharLCD.Adafruit_CharLCD import Adafruit_CharLCD
 
 #CONSTANTS
 BAD_OBD = 2
@@ -15,7 +15,7 @@ ports = "/dev/rfcomm99"
 #ports = "/dev/pts/1"
 
 #Init lcd screen
-lcd = Adafruit_CharLCD(rs=25,en=24,d4=23,d5=18,d6=15,d7=14,cols=16,lines=2)
+lcd = Adafruit_CharLCD(rs=0, en=5, d4=26, d5=19, d6=13, d7=6,cols=16,lines=2)
 
 #CONNECT TO OBD
 def connection(ports):
