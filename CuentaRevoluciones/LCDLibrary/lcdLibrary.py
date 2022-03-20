@@ -171,5 +171,5 @@ h = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)
 h.writeMessage("hola que tal\nyo bien")
 h.writeMessage("perro")
 h.home()
-h.clearDisplay()
-GPIO.cleanup()
+sleep(2)
+del h

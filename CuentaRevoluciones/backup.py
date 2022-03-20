@@ -1,5 +1,5 @@
 import time as t
-from OBDLibrary.PosibleNueva.obd import obd
+from OBDLibrary.Nueva.obd import obd
 from Adafruit_CharLCD.Adafruit_CharLCD import Adafruit_CharLCD
 
 #CONSTANTS
