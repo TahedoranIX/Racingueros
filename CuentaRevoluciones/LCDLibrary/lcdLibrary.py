@@ -46,6 +46,7 @@ class LCD:
         #######################
 
     def __del__(self):
+        self.clearDisplay()
         GPIO.cleanup()
 
     def __enviar(self):
@@ -88,7 +89,7 @@ class LCD:
         """
         self.__sendCommand(rs=0, data=[1,address[0],address[1],address[2],address[3],address[4],address[5],address[6]], time=LOW_TIME)
 
-    def __writeRAM(self, data):
+    def writeRAM(self, data):
         """
         Write data in RAM, show chars.
 
@@ -153,7 +154,7 @@ class LCD:
                 letra = bin(ord(char))[2:].zfill(8)
                 for binario in letra:
                     dataMessage.append(int(binario))
-                self.__writeRAM(dataMessage)
+                self.writeRAM(dataMessage)
         
 if __name__ == "__main__":
     h = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)

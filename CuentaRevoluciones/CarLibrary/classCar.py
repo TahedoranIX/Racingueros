@@ -1,10 +1,12 @@
 import time as t
 from OBDLibrary.obd import obd
 from LCDLibrary.lcdLibrary import LCD
+from Rotaries.encoder import Encoder
 
+MENU_QUANTITY = 3
 
 class Smart:
-    def __init__(self, rs, en, d4, d5, d6, d7, port, debug=False):
+    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, maxRev=5500, debug=False):
 
         self.__lcd = LCD(rs=rs, en=en, d4=d4, d5=d5, d6=d6, d7=d7)
         self.__port = port
@@ -15,8 +17,11 @@ class Smart:
 
         # 1º Stage - Declarations
         self.__obd = self.__connection()
+        #self.__encoder = Encoder(e1, e2)
+        #self.__encoderLast = self.__encoder.getValue()
         self.__stopped = False
         self.__finalTime = None
+        self.__rpmSegments = int(maxRev/16)
 
         # OBD DATA
         self.__speed = None
@@ -26,8 +31,6 @@ class Smart:
     def __del__(self):
         if self.__debug:
             print("Destructor Smart")
-        self.__lcd.clearDisplay()
-        self.__lcd.writeMessage('Lost\nConnection')
         del self.__lcd
         self.__obd.close()
 
@@ -44,24 +47,33 @@ class Smart:
                 self.__lcd.clearDisplay()
                 self.__lcd.writeMessage("Not Connected")
                 t.sleep(2)
+                self.__lcd.clearDisplay()
+                self.__lcd.writeMessage("Connecting...")
                 connection = obd.OBD(self.__port, fast=False, timeout=30)
             return connection
         except:
             if self.__debug:
                 print("except conn")
             self.__lcd.clearDisplay()
-            self.__lcd.writeMessage("Problems")
+            self.__lcd.writeMessage("Problems OBD")
             t.sleep(2)
             return self.__connection()
 
+    def sos(self):
+        self.__lcd.clearDisplay()
+        self.__lcd.writeMessage('Connection\nLost')
+        self.__obd.close()
+        self.__obd = self.__connection()
+
     def turboCare(self, minimumSpeed):
+
         if self.__speed <= minimumSpeed:
             if not self.__stopped:
                 self.__finalTime = int(t.time()) + 60
                 self.__stopped = True
-                self.rpmCoolScreen()
             else:
                 time = self.__finalTime - int(t.time())
+                self.__lcd.clearDisplay()
                 self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
                 if time <= 0:
                     self.__lcd.writeMessage('\nEngine OFF')
@@ -82,6 +94,10 @@ class Smart:
         self.__speed = int(self.__obd.query(obd.commands.SPEED).value.magnitude)
         self.__rpm = str(self.__obd.query(obd.commands.RPM).value.magnitude)
         self.__cool = str(self.__obd.query(obd.commands.COOLANT_TEMP).value.magnitude)
+        if self.__debug:
+            print("velocidad " + str(self.__speed))
+            print("rpm " + self.__rpm)
+            print("coolant " + self.__cool)
 
         return self.__speed, self.__rpm, self.__cool
 
@@ -90,9 +106,13 @@ class Smart:
         self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
-    def connectionLost(self):
+    def rpmScreen(self):
         self.__lcd.clearDisplay()
-        self.__lcd.writeMessage('Connection\nLost')
+        actualRpm = int(float(self.__rpm) / self.__rpmSegments)
+        while actualRpm > 0:
+            self.__lcd.writeRAM([1,1,1,1,1,1,1,1])
+            actualRpm = actualRpm - 1
+        self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
     def checkRotatory(self):
         """
@@ -101,3 +121,9 @@ class Smart:
         :returns: Screen number
         """
         return 0
+
+        valor = abs(self.__encoder.getValue())
+        if valor > MENU_QUANTITY:
+            self.__encoder.value = 0
+        return valor
+
