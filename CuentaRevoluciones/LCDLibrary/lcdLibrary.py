@@ -1,17 +1,6 @@
 import RPi.GPIO as GPIO
 from time import sleep
-'''
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(7, GPIO.OUT)
 
-GPIO.output(7, True)
-
-p = GPIO.PWM(11, 50)
-p.start(6)
-p.ChangeDutyCycle(4)
-p.ChangeFrequency(60)
-p.stop()
-'''
 
 LOW_TIME = 0.000040
 HIGH_TIME = 0.00153
@@ -166,10 +155,9 @@ class LCD:
                     dataMessage.append(int(binario))
                 self.__writeRAM(dataMessage)
         
-
-h = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)
-h.writeMessage("hola que tal\nyo bien")
-h.writeMessage("perro")
-h.home()
-sleep(2)
-del h
+if __name__ == "__main__":
+    h = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)
+    h.writeMessage("hola que tal\nyo bien")
+    sleep(2)
+    h.clearDisplay()
+    del h

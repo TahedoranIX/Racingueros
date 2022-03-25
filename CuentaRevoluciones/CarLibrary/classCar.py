@@ -1,14 +1,17 @@
 import time as t
-from OBDLibrary.Nueva.obd import obd
+from OBDLibrary.obd import obd
 from LCDLibrary.lcdLibrary import LCD
 
 
 class Smart:
-    def __init__(self, rs, en, d4, d5, d6, d7, port, debug=0):
-        if debug:
-            obd.logger.setLevel(obd.logging.DEBUG)
+    def __init__(self, rs, en, d4, d5, d6, d7, port, debug=False):
+
         self.__lcd = LCD(rs=rs, en=en, d4=d4, d5=d5, d6=d6, d7=d7)
         self.__port = port
+        self.__debug = debug
+        if self.__debug:
+            obd.logger.setLevel(obd.logging.DEBUG)
+            print("Starting ConnOBD")
 
         # 1º Stage - Declarations
         self.__obd = self.__connection()
@@ -21,6 +24,8 @@ class Smart:
         self.__cool = None
 
     def __del__(self):
+        if self.__debug:
+            print("Destructor Smart")
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Lost\nConnection')
         del self.__lcd
@@ -28,16 +33,22 @@ class Smart:
 
     def __connection(self):
         try:
+            if self.__debug:
+                print("try conn")
             self.__lcd.clearDisplay()
             self.__lcd.writeMessage("Connecting...")
             connection = obd.OBD(self.__port, fast=False, timeout=30)
             while not connection.is_connected():
+                if self.__debug:
+                    print("while not connection")
                 self.__lcd.clearDisplay()
                 self.__lcd.writeMessage("Not Connected")
                 t.sleep(2)
                 connection = obd.OBD(self.__port, fast=False, timeout=30)
             return connection
         except:
+            if self.__debug:
+                print("except conn")
             self.__lcd.clearDisplay()
             self.__lcd.writeMessage("Problems")
             t.sleep(2)
@@ -78,6 +89,10 @@ class Smart:
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
+
+    def connectionLost(self):
+        self.__lcd.clearDisplay()
+        self.__lcd.writeMessage('Connection\nLost')
 
     def checkRotatory(self):
         """
