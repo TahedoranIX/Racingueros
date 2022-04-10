@@ -1,9 +1,11 @@
 import RPi.GPIO as GPIO
 from time import sleep
+from Adafruit_CharLCD import Adafruit_CharLCD
 
-
-LOW_TIME = 0.000040
+LOW_TIME = 0.00004
 HIGH_TIME = 0.00153
+#LOW_TIME = 0.001
+#HIGH_TIME = 1
 GPIO.setwarnings(False)
 
 class LCD:
@@ -19,17 +21,14 @@ class LCD:
         self.__rs = rs
         for pin in (rs, en, d4, d5, d6, d7):
             GPIO.setup(pin, GPIO.OUT)
-         
+
         #######################
         # begin INIT
         #######################
-        GPIO.output(en, 0)
-        
+
         #function set1
-        GPIO.output(rs, 0)
-        GPIO.output(self.__datas, (0,0,1,1))
-        self.__enviar()
-        sleep(LOW_TIME)
+        self.__sendCommand(rs=0, data=[0,0,1,1,0,0,1,1], time=LOW_TIME)
+        self.__sendCommand(rs=0, data=[0,0,1,1,0,0,1,0], time=LOW_TIME)
         #function set2
         self.__functionSet()
         #function set3
@@ -40,17 +39,17 @@ class LCD:
         self.clearDisplay()
         #entry mode
         self.__entryMode()
-
         #######################
         # end INIT
         #######################
 
     def __del__(self):
         self.clearDisplay()
-        GPIO.cleanup()
+        #GPIO.cleanup()
 
     def __enviar(self):
         ''' Trigger PIN ENABLE'''
+        GPIO.output(self.__en, 0)
         GPIO.output(self.__en, 1)
         GPIO.output(self.__en, 0)
 
@@ -155,10 +154,17 @@ class LCD:
                 for binario in letra:
                     dataMessage.append(int(binario))
                 self.writeRAM(dataMessage)
-        
+
 if __name__ == "__main__":
-    h = LCD(d4=26,d5=19,d6=13,d7=6,en=5,rs=0)
+    h = LCD(d4=23,d5=18,d6=15,d7=14,en=24,rs=25)
     h.writeMessage("hola que tal\nyo bien")
+    h.writeMessage("perro")
     sleep(2)
-    h.clearDisplay()
-    del h
+    """
+    lcd = Adafruit_CharLCD(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, cols=16, lines=2)
+    lcd.clear()
+    lcd.message("hola que tal\nyo bien")
+    lcd.message("perro")
+    sleep(2)
+    lcd.clear()"""
+

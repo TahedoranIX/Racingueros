@@ -1,7 +1,7 @@
 import time as t
-from OBDLibrary.obd import obd
+from OBDLibrary import obd
 from LCDLibrary.lcdLibrary import LCD
-from Rotaries.encoder import Encoder
+from RotaryLibrary.encoder import Encoder
 
 MENU_QUANTITY = 3
 
@@ -66,11 +66,12 @@ class Smart:
         self.__obd = self.__connection()
 
     def turboCare(self, minimumSpeed):
-
         if self.__speed <= minimumSpeed:
             if not self.__stopped:
                 self.__finalTime = int(t.time()) + 60
                 self.__stopped = True
+                if self.__debug:
+                    print("Start timer turbocare")
             else:
                 time = self.__finalTime - int(t.time())
                 self.__lcd.clearDisplay()
@@ -80,6 +81,8 @@ class Smart:
                 else:
                     self.__lcd.writeMessage('\nTime: 00:' + str('{:0>2}'.format(time)))
         elif self.__stopped:
+            if self.__debug:
+                print("Velocidad no suficiente turbocare")
             self.__stopped = False
 
     def getStopped(self):
@@ -98,8 +101,6 @@ class Smart:
             print("velocidad " + str(self.__speed))
             print("rpm " + self.__rpm)
             print("coolant " + self.__cool)
-
-        return self.__speed, self.__rpm, self.__cool
 
     def rpmCoolScreen(self):
         self.__lcd.clearDisplay()

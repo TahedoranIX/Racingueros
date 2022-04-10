@@ -4,7 +4,7 @@ from time import sleep
 MINIMUM_SPEED = 5
 # port = "/dev/rfcomm99"
 port = "/dev/pts/2"
-coche = Smart(rs=0, en=5, d4=26, d5=19, d6=13, d7=6, e1=None, e2=None, port=port, debug=False)
+coche = Smart(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, e1=20, e2=16, port=port, debug=True)
 while True:
         try:
             coche.getOBDData()
@@ -20,7 +20,8 @@ while True:
                 elif menu == 3:
                     pass
             sleep(.5)
-        except:
+        except Exception as e:
+            print(e)
             print("Reinicio SMART")
             coche.sos()
             sleep(2)
