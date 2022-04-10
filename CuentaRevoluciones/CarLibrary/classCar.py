@@ -6,8 +6,22 @@ from RotaryLibrary.encoder import Encoder
 MENU_QUANTITY = 3
 
 class Smart:
-    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, maxRev=5500, debug=False):
-
+    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, maxRev=5500, debug=False):
+        """
+        Args:
+            rs: Register Select pin
+            en: Enable pin
+            d4: Data 4 pin
+            d5: Data 5 pin
+            d6: Data 6 pin
+            d7: Data 7 pin
+            port: obd port in raspberry
+            e1: OutA pin
+            e2: OutB pin
+            eb: Button pin
+            maxRev: MaxRev of car
+            debug: True/false
+        """
         self.__lcd = LCD(rs=rs, en=en, d4=d4, d5=d5, d6=d6, d7=d7)
         self.__port = port
         self.__debug = debug
@@ -17,13 +31,22 @@ class Smart:
 
         # 1º Stage - Declarations
         self.__obd = self.__connection()
-        self.__encoder = Encoder(e1, e2)
-        self.__encoderLast = self.__encoder.getValue()
+        self.__encoder = Encoder(e1, e2, eb)
+
         if self.__debug:
-            print("rotatorio: ", self.__encoderLast)
+            print("rotatorio: ", self.__encoder.getValue())
+
+        #TURBOCARE
         self.__stopped = False
         self.__finalTime = None
+
+        #RPMSCREEN
         self.__rpmSegments = int(maxRev/16)
+
+        #TIMESCREEN
+        self.__initialTime = None
+        self.__actualTime = None
+        self.__lastTime = None
 
         # OBD DATA
         self.__speed = None
@@ -61,11 +84,14 @@ class Smart:
             t.sleep(2)
             return self.__connection()
 
+
+
     def sos(self):
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Connection\nLost')
         self.__obd.close()
         self.__obd = self.__connection()
+
 
     def turboCare(self, minimumSpeed):
         if self.__speed <= minimumSpeed:
@@ -87,8 +113,24 @@ class Smart:
                 print("Velocidad no suficiente turbocare")
             self.__stopped = False
 
+
     def getStopped(self):
         return self.__stopped
+
+
+    def checkRotatory(self):
+        """
+        Check Rotatory state for changing screen
+
+        :returns: Screen number
+        """
+        valor = abs(self.__encoder.getValue())
+        if valor > MENU_QUANTITY:
+            self.__encoder.value = 0
+        if self.__debug:
+            print("rotatory: ", valor)
+        return valor
+
 
     def getOBDData(self):
         """
@@ -104,10 +146,12 @@ class Smart:
             print("rpm " + self.__rpm)
             print("coolant " + self.__cool)
 
+
     def rpmCoolScreen(self):
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
+
 
     def rpmScreen(self):
         self.__lcd.clearDisplay()
@@ -117,16 +161,30 @@ class Smart:
             actualRpm = actualRpm - 1
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
-    def checkRotatory(self):
-        """
-        Check Rotatory state for changing screen
+    def timeScreen(self):
+        if self.__encoder.getButtonValue():
+            if self.__initialTime == None:
+                self.__initialTime = t.time()
+            self.__actualTime = t.time() - self.__initialTime
+            h, m, s = self.timeConvert(self.__actualTime)
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage("{0}:{1}:{2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
+        elif self.__initialTime != None:
+            self.__initialTime = None
+        else:
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage("00:00:00" + '\nRPM: ' + self.__rpm)
 
-        :returns: Screen number
-        """
-        valor = abs(self.__encoder.getValue())
-        if valor > MENU_QUANTITY:
-            self.__encoder.value = 0
-        if self.__debug:
-            print("rotatory: ", valor)
-        return valor
+    def timeConvert(self, sec):
+        mins = sec // 60
+        sec = sec % 60
+        hours = mins // 60
+        mins = mins % 60
+        return int(hours), int(mins), int(sec)
+
+
+
+
+
+
 

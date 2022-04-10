@@ -2,9 +2,9 @@ from CarLibrary.classCar import Smart
 from time import sleep
 
 MINIMUM_SPEED = 5
-# port = "/dev/rfcomm99"
-port = "/dev/pts/2"
-coche = Smart(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, e1=20, e2=16, port=port, debug=True)
+port = "/dev/rfcomm99"
+#port = "/dev/pts/2"
+coche = Smart(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, e1=20, e2=16, eb=21, port=port, debug=False)
 while True:
         try:
             coche.getOBDData()
@@ -16,7 +16,7 @@ while True:
                 elif menu == 1:
                     coche.rpmCoolScreen()
                 elif menu == 2:
-                    pass
+                    coche.timeScreen()
                 elif menu == 3:
                     pass
             sleep(.5)
