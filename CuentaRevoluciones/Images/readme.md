@@ -1,6 +1,8 @@
 ## Actual Pinout
 Pinout specified in BCM Nomenclature.
+
 ![LCD](./lcd_schem.png)
+
 ### LCD:
 |                |PIN                            |
 |----------------|-------------------------------|
@@ -13,6 +15,7 @@ Pinout specified in BCM Nomenclature.
 
 
 ![Rotary](./rotary_schem.png)
+
 ### Rotary Encoder:
 |                |PIN                            |
 |----------------|-------------------------------|
