@@ -23,4 +23,4 @@ Pinout specified in BCM Nomenclature.
 |----------------|-------------------------------|
 |OutA								|`GPIO 20`|
 |OutB								|`GPIO 16`|
-|Pulsar								|`Button`|
+|Pulsar								|`GPIO 21`|
