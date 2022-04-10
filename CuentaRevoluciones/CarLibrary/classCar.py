@@ -17,8 +17,10 @@ class Smart:
 
         # 1º Stage - Declarations
         self.__obd = self.__connection()
-        #self.__encoder = Encoder(e1, e2)
-        #self.__encoderLast = self.__encoder.getValue()
+        self.__encoder = Encoder(e1, e2)
+        self.__encoderLast = self.__encoder.getValue()
+        if self.__debug:
+            print("rotatorio: ", self.__encoderLast)
         self.__stopped = False
         self.__finalTime = None
         self.__rpmSegments = int(maxRev/16)
@@ -121,10 +123,10 @@ class Smart:
 
         :returns: Screen number
         """
-        return 0
-
         valor = abs(self.__encoder.getValue())
         if valor > MENU_QUANTITY:
             self.__encoder.value = 0
+        if self.__debug:
+            print("rotatory: ", valor)
         return valor
 
