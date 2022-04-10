@@ -1,9 +1,9 @@
-## Actual Pinout
+# Actual Pinout
 Pinout specified in BCM Nomenclature.
 
+## LCD:
 ![LCD](./lcd_schem.png)
 
-### LCD:
 |                |PIN                            |
 |----------------|-------------------------------|
 |D7								|`GPIO 14`            |
@@ -14,9 +14,11 @@ Pinout specified in BCM Nomenclature.
 |RegisterSelector								|`GPIO 25`|
 
 
+
+
+## Rotary Encoder:
 ![Rotary](./rotary_schem.png)
 
-### Rotary Encoder:
 |                |PIN                            |
 |----------------|-------------------------------|
 |OutA								|`GPIO 20`|
