@@ -2,7 +2,7 @@
 Pinout specified in BCM Nomenclature.
 
 ## LCD:
-<img src="./lcd_schem.png" alt="LCD" width="10%"/>
+<img src="./lcd_schem.png" alt="LCD" width="30%"/>
 
 |                |PIN                            |
 |----------------|-------------------------------|
@@ -17,7 +17,7 @@ Pinout specified in BCM Nomenclature.
 
 
 ## Rotary Encoder:
-![Rotary](./rotary_schem.png)
+<img src="./rotary_schem.png" alt="Rotary" width="10%"/>
 
 |                |PIN                            |
 |----------------|-------------------------------|
