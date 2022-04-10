@@ -3,8 +3,6 @@ from OBDLibrary import obd
 from LCDLibrary.lcdLibrary import LCD
 from RotaryLibrary.encoder import Encoder
 
-MENU_QUANTITY = 3
-
 class Smart:
     def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, maxRev=5500, debug=False):
         """
@@ -118,14 +116,14 @@ class Smart:
         return self.__stopped
 
 
-    def checkRotatory(self):
+    def checkRotatory(self, menu):
         """
         Check Rotatory state for changing screen
 
         :returns: Screen number
         """
         valor = abs(self.__encoder.getValue())
-        if valor > MENU_QUANTITY:
+        if valor > menu:
             self.__encoder.value = 0
         if self.__debug:
             print("rotatory: ", valor)
