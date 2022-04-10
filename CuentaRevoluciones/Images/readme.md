@@ -2,7 +2,7 @@
 Pinout specified in BCM Nomenclature.
 
 ## LCD:
-![LCD](./lcd_schem.png)
+<img src="./lcd_schem.png" alt="LCD" width="200"/>
 
 |                |PIN                            |
 |----------------|-------------------------------|
