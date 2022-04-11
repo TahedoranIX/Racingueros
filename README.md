@@ -9,5 +9,6 @@ Cuentarevoluciones hecho con RPi zero W con pantalla lcd 16x2 y funciona mediant
 ### Ideas
 
 ### En proceso
-- Añadir rotatorio cuentarevoluciones para menú.
+
 ### Acabado
+**CuentaRevoluciones**
