@@ -1,10 +1,26 @@
 ## CuentaRevoluciones
-Cuentarevoluciones hecho con RPi zero W con pantalla lcd 16x2 y funciona mediante OBD.
+Cuentarevoluciones hecho con RPi zero W con pantalla lcd 16x2 y rotary-encoder. Funciona mediante OBDII.
 
-Modelos stl de la caja en carpeta **Modelos**
+### Que es? Como funciona?
+Pantalla para coches sin cuentarevoluciones, que se conecta por el protocolo OBDII (todos los coches a partir de los 2000 tienen).
 
-### Conexiones:
+Mediante la librería LCD, podemos mostrar en pantalla todos los datos que escojamos del coche.
 
+Mediante la librería Rotary Encoder, podemos interactuar con la pantalla mediante menús.
+
+### Cambios
+#### LCD Library
+Librería para controlador ST7066U hecha por mí. Al ser más específica que la Adafruit funciona a mayor velocidad.
+
+#### Rotary encoder Library
+Le he realizado unos cambios para que funcione con el rotary conectado de GPIO -> GND y he añadido la función de botón para los rotary con botón.
+
+
+#### Modelos 3D
+	Modelos 3D en formato stl de la caja **Modelos**
+
+#### Conexiones:
+	Cableados a la RPi en carpeta **Images**
 
 ### Productos:
 - [Librería OBD original](https://github.com/brendan-w/python-OBD)
@@ -15,7 +31,9 @@ Modelos stl de la caja en carpeta **Modelos**
 - [Rotativo](https://es.aliexpress.com/item/4000028678187.html?gatewayAdapt=glo2esp&spm=a2g0o.9042311.0.0.274263c0LgHA3h)
 
 ### Pruebas:
+Useful to program without having to be in the car.
 - [OBD VIRTUAL](https://github.com/Ircama/ELM327-emulator)
 
 ### Raspberry AP:
+Useful to debug the RPi while it's in the box.
 - [raspberry](https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-routed-wireless-access-point)
