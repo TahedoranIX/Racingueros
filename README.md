@@ -11,4 +11,4 @@ Cuentarevoluciones hecho con RPi zero W con pantalla lcd 16x2 y funciona mediant
 ### En proceso
 
 ### Acabado
-  **CuentaRevoluciones**
+   **CuentaRevoluciones**
