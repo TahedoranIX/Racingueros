@@ -43,8 +43,7 @@ class Smart:
 
         #TIMESCREEN
         self.__initialTime = None
-        self.__actualTime = None
-        self.__lastTime = None
+        self.__lastTime = [0,0,0]
 
         # OBD DATA
         self.__speed = None
@@ -91,43 +90,57 @@ class Smart:
         self.__obd = self.__connection()
 
 
-    def turboCare(self, minimumSpeed):
+    def turboCare(self, minimumSpeed, actualTime):
+        #Estamos por debajo de la velocidad minima?
         if self.__speed <= minimumSpeed:
+            #Si nos acabamos de parar, set finalTime
             if not self.__stopped:
-                self.__finalTime = int(t.time()) + 60
+                self.__finalTime = actualTime + 60
                 self.__stopped = True
                 if self.__debug:
                     print("Start timer turbocare")
+            #Si llevamos un rato parados, printamos el tiempo que queda y temp refrigerante
             else:
-                time = self.__finalTime - int(t.time())
+                time = self.__finalTime - actualTime
                 self.__lcd.clearDisplay()
                 self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
                 if time <= 0:
                     self.__lcd.writeMessage('\nEngine OFF')
                 else:
-                    self.__lcd.writeMessage('\nTime: 00:' + str('{:0>2}'.format(time)))
+                    self.__lcd.writeMessage('\nTime: 00:' + str('{:0>2}'.format(int(time))))
+        #Si estabamos parados, pero ya no.
         elif self.__stopped:
             if self.__debug:
                 print("Velocidad no suficiente turbocare")
             self.__stopped = False
+        else:
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage('Temp: ' + self.__cool + ' C' + '\nEn marcha')
 
 
     def getStopped(self):
         return self.__stopped
 
 
-    def checkRotatory(self, menu):
+    def getRotatory(self, menu):
         """
         Check Rotatory state for changing screen
 
         :returns: Screen number
         """
-        valor = abs(self.__encoder.getValue())
-        if valor > menu:
+        valor = self.__encoder.getValue()
+        if valor > (menu - 1):
             self.__encoder.value = 0
+            valor = 0
+        elif valor < 0:
+            valor = (menu - 1)
+            self.__encoder.value = (menu - 1)
         if self.__debug:
             print("rotatory: ", valor)
         return valor
+
+    def getButtonRotatory(self):
+        return self.__encoder.getButtonValue()
 
 
     def getOBDData(self):
@@ -146,12 +159,18 @@ class Smart:
 
 
     def rpmCoolScreen(self):
+        """
+        Rpm with coolant temp screen
+        """
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
 
     def rpmScreen(self):
+        """
+        Rpm with revcounter
+        """
         self.__lcd.clearDisplay()
         actualRpm = int(float(self.__rpm) / self.__rpmSegments)
         while actualRpm > 0:
@@ -159,21 +178,37 @@ class Smart:
             actualRpm = actualRpm - 1
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
-    def timeScreen(self):
-        if self.__encoder.getButtonValue():
+    def timeScreen(self, actualTime):
+        """
+        StopWatch screen
+        :param actualTime: Actual time given by main loop
+        """
+        #Si se ha presionado el botón
+        if self.getButtonRotatory():
+            #Empezamos el contador
             if self.__initialTime == None:
                 self.__initialTime = t.time()
-            self.__actualTime = t.time() - self.__initialTime
-            h, m, s = self.timeConvert(self.__actualTime)
-            self.__lcd.clearDisplay()
-            self.__lcd.writeMessage("{0}:{1}:{2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
+                self.__lastTime = None
+            else:
+                #Tiempo desde que empezó el contador en seg.
+                self.__lastTime = actualTime - self.__initialTime
+                #Conversion a horas, minutos, segundos
+                h, m, s = self.__timeConvert(self.__lastTime)
+                #Printamos el contador.
+                self.__lcd.clearDisplay()
+                self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
+
+        #si el boton no esta presionado y habia valor, guardamos last time para que se quede marcado.
         elif self.__initialTime != None:
             self.__initialTime = None
+            h, m, s = self.__timeConvert(self.__lastTime)
+            self.__lastTime = []
+            self.__lastTime[:3] = h, m, s
         else:
             self.__lcd.clearDisplay()
-            self.__lcd.writeMessage("00:00:00" + '\nRPM: ' + self.__rpm)
+            self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(self.__lastTime[0], self.__lastTime[1], self.__lastTime[2]) + '\nRPM: ' + self.__rpm)
 
-    def timeConvert(self, sec):
+    def __timeConvert(self, sec):
         mins = sec // 60
         sec = sec % 60
         hours = mins // 60
