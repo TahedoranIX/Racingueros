@@ -9,11 +9,12 @@ Mediante la librería LCD, podemos mostrar en pantalla todos los datos que escoj
 Mediante la librería Rotary Encoder, podemos interactuar con la pantalla mediante menús.
 
 ### Cambios
+
 #### LCD Library
-Librería para controlador ST7066U hecha por mí. Al ser más específica que la Adafruit funciona a mayor velocidad.
+	Librería para controlador ST7066U hecha por mí. Al ser más específica que la Adafruit funciona a mayor velocidad.
 
 #### Rotary encoder Library
-Le he realizado unos cambios para que funcione con el rotary conectado de GPIO -> GND y he añadido la función de botón para los rotary con botón.
+	Le he realizado unos cambios para que funcione con el rotary conectado de GPIO -> GND y he añadido la función de botón para los rotary con botón.
 
 
 #### Modelos 3D
