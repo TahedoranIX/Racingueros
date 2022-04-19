@@ -90,29 +90,34 @@ class Smart:
         self.__obd = self.__connection()
 
 
-    def turboCare(self, minimumSpeed, actualTime):
-        #Estamos por debajo de la velocidad minima?
-        if self.__speed <= minimumSpeed:
-            #Si nos acabamos de parar, set finalTime
-            if not self.__stopped:
-                self.__finalTime = actualTime + 60
-                self.__stopped = True
-                if self.__debug:
-                    print("Start timer turbocare")
-            #Si llevamos un rato parados, printamos el tiempo que queda y temp refrigerante
-            else:
-                time = self.__finalTime - actualTime
-                self.__lcd.clearDisplay()
-                self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
-                if time <= 0:
-                    self.__lcd.writeMessage('\nEngine OFF')
-                else:
-                    self.__lcd.writeMessage('\nTime: 00:' + str('{:0>2}'.format(int(time))))
-        #Si estabamos parados, pero ya no.
-        elif self.__stopped:
+    def startTurboCare(self, minimumSpeed, actualTime):
+        # Estamos por debajo de la velocidad minima?
+        # Si nos acabamos de parar, set finalTime
+        if self.__speed <= minimumSpeed and not self.__stopped:
+            self.__stopped = True
+            self.__finalTime = actualTime + 60
+
+            if self.__debug:
+                print("Start timer turbocare")
+
+        elif self.__speed > minimumSpeed and self.__stopped:
+            self.__stopped = False
+
             if self.__debug:
                 print("Velocidad no suficiente turbocare")
-            self.__stopped = False
+
+
+    def turboCare(self, actualTime):
+        #Si estamos parados, printamos el tiempo que queda y temp refrigerante
+        if self.__stopped:
+            time = self.__finalTime - actualTime
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
+            if time <= 0:
+                self.__lcd.writeMessage('\nEngine OFF')
+            else:
+                self.__lcd.writeMessage('\nTime: 00:' + str('{:0>2}'.format(int(time))))
+        #Si se activa el menu pero no estamos parados
         else:
             self.__lcd.clearDisplay()
             self.__lcd.writeMessage('Temp: ' + self.__cool + ' C' + '\nEn marcha')

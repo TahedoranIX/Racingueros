@@ -12,6 +12,8 @@ while True:
             actualTime = t.time()
             #Obtencion datos.
             coche.getOBDData()
+            #Set Tiempo de parada
+            coche.startTurboCare(MINIMUM_SPEED, actualTime)
 
             ############
             ###MENU
@@ -22,7 +24,7 @@ while True:
             elif menu == 1:
                 coche.rpmScreen()
             elif menu == 2:
-                coche.turboCare(MINIMUM_SPEED, actualTime)
+                coche.turboCare(actualTime)
             elif menu == 3:
                 coche.timeScreen(actualTime)
 
