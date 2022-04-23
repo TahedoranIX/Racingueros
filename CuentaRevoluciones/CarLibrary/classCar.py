@@ -3,8 +3,10 @@ from OBDLibrary import obd
 from LCDLibrary.lcdLibrary import LCD
 from RotaryLibrary.encoder import Encoder
 
+
+
 class Smart:
-    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, maxRev=5500, debug=False):
+    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, maxRev=5500, minRev=1200, debug=False):
         """
         Args:
             rs: Register Select pin
@@ -14,10 +16,11 @@ class Smart:
             d6: Data 6 pin
             d7: Data 7 pin
             port: obd port in raspberry
-            e1: OutA pin
-            e2: OutB pin
-            eb: Button pin
-            maxRev: MaxRev of car
+            e1: OutA pin. util Menus
+            e2: OutB pin. util Menus
+            eb: Button pin. util StartClock
+            maxRev: MaxRev of car. util RpmScreen
+            minRev: MinRev of car. util RpmScreen
             debug: True/false
         """
         self.__lcd = LCD(rs=rs, en=en, d4=d4, d5=d5, d6=d6, d7=d7)
@@ -39,7 +42,8 @@ class Smart:
         self.__finalTime = None
 
         #RPMSCREEN
-        self.__rpmSegments = int(maxRev/16)
+        self.__rpmSegments = int((maxRev-minRev)/16)
+        self.__minRev = minRev
 
         #TIMESCREEN
         self.__initialTime = None
@@ -177,7 +181,10 @@ class Smart:
         Rpm with revcounter
         """
         self.__lcd.clearDisplay()
-        actualRpm = int(float(self.__rpm) / self.__rpmSegments)
+        actualRpm = int((float(self.__rpm) - self.__minRev) / self.__rpmSegments)
+        if self.__debug:
+            print(actualRpm)
+            print(self.__rpmSegments)
         while actualRpm > 0:
             self.__lcd.writeRAM([1,1,1,1,1,1,1,1])
             actualRpm = actualRpm - 1
