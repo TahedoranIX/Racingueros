@@ -3,7 +3,8 @@ from OBDLibrary import obd
 from LCDLibrary.lcdLibrary import LCD
 from RotaryLibrary.encoder import Encoder
 
-
+DENSIDAD_G = 720
+ESTEQUIOMETRICA = 14.7
 
 class Smart:
     def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, maxRev=5500, minRev=1200, debug=False):
@@ -53,6 +54,9 @@ class Smart:
         self.__speed = None
         self.__rpm = None
         self.__cool = None
+        self.__instMPG = 0
+        self.__fuelPerS = 0
+        self.__muestras = 0
 
     def __del__(self):
         if self.__debug:
@@ -151,20 +155,37 @@ class Smart:
     def getButtonRotatory(self):
         return self.__encoder.getButtonValue()
 
+    def getDataFromFile(self):
+        pass
+
+    def saveDataToFile(self):
+        pass
 
     def getOBDData(self):
         """
         Get OBD data
 
-        :returns: Speed, RPM, Coolant
+        :returns: Speed, RPM, Coolant, MPG
         """
         self.__speed = int(self.__obd.query(obd.commands.SPEED).value.magnitude)
         self.__rpm = str(self.__obd.query(obd.commands.RPM).value.magnitude)
         self.__cool = str(self.__obd.query(obd.commands.COOLANT_TEMP).value.magnitude)
+
+        #self.__fuel += self.__fuelPerS
+        #self.__km += self.__obd.query(obd.commands.DISTANCE_W_MIL).value.magnitude
+
+        self.__fuelPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / ESTEQUIOMETRICA
+        self.__instMPG = self.__fuelPerS / (self.__speed / 36)
+        self.__mpg = ((self.__mpg * self.__muestras + self.__instMPG) / (self.__muestras + 1))
+        self.__muestras += 1
+
+
         if self.__debug:
             print("velocidad " + str(self.__speed))
             print("rpm " + self.__rpm)
             print("coolant " + self.__cool)
+            print("inst mpg " + str(self.__instMPG))
+            print("media mpg " + self.__mpg)
 
 
     def rpmCoolScreen(self):

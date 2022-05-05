@@ -5,7 +5,7 @@ MINIMUM_SPEED = 5
 MENU_QUANTITY = 4
 #port = "/dev/rfcomm99"
 port = "/dev/pts/2"
-coche = Smart(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, e1=20, e2=16, eb=21, port=port, debug=False)
+coche = Smart(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, e1=20, e2=16, eb=21, port=port, debug=True)
 while True:
         try:
             #Tiempo actual.
