@@ -2,12 +2,14 @@ import time as t
 from OBDLibrary import obd
 from LCDLibrary.lcdLibrary import LCD
 from RotaryLibrary.encoder import Encoder
+from os.path import exists
 
 DENSIDAD_G = 720
 ESTEQUIOMETRICA = 14.7
+FILENAME = 'mpg.dat'
 
 class Smart:
-    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, maxRev=5500, minRev=1200, debug=False):
+    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, minimumSpeed, maxRev=5500, minRev=1200, debug=False):
         """
         Args:
             rs: Register Select pin
@@ -20,6 +22,7 @@ class Smart:
             e1: OutA pin. util Menus
             e2: OutB pin. util Menus
             eb: Button pin. util StartClock
+            minimumSpeed: Minimum Speed considered of vehicle
             maxRev: MaxRev of car. util RpmScreen
             minRev: MinRev of car. util RpmScreen
             debug: True/false
@@ -41,6 +44,7 @@ class Smart:
         #TURBOCARE
         self.__stopped = False
         self.__finalTime = None
+        self.__minimumSpeed = minimumSpeed
 
         #RPMSCREEN
         self.__rpmSegments = int((maxRev-minRev)/16)
@@ -54,9 +58,10 @@ class Smart:
         self.__speed = None
         self.__rpm = None
         self.__cool = None
-        self.__instMPG = 0
-        self.__fuelPerS = 0
-        self.__muestras = 0
+        self.__getDataFromFile()
+        self.__instMPG = None
+        self.__LPerS = None
+
 
     def __del__(self):
         if self.__debug:
@@ -98,17 +103,17 @@ class Smart:
         self.__obd = self.__connection()
 
 
-    def startTurboCare(self, minimumSpeed, actualTime):
+    def startTurboCare(self, actualTime):
         # Estamos por debajo de la velocidad minima?
         # Si nos acabamos de parar, set finalTime
-        if self.__speed <= minimumSpeed and not self.__stopped:
+        if self.__speed <= self.__minimumSpeed and not self.__stopped:
             self.__stopped = True
             self.__finalTime = actualTime + 60
 
             if self.__debug:
                 print("Start timer turbocare")
 
-        elif self.__speed > minimumSpeed and self.__stopped:
+        elif self.__speed > self.__minimumSpeed and self.__stopped:
             self.__stopped = False
 
             if self.__debug:
@@ -155,11 +160,27 @@ class Smart:
     def getButtonRotatory(self):
         return self.__encoder.getButtonValue()
 
-    def getDataFromFile(self):
-        pass
+    def __getDataFromFile(self):
+        if exists(FILENAME):
+            f = open(FILENAME, 'r')
+            self.__mpg = float(f.readline())
+            self.__muestras = float(f.readline())
 
-    def saveDataToFile(self):
-        pass
+        else:
+            self.__muestras = 0
+            self.__mpg = 0
+            f = open(FILENAME, 'x')
+            f.write('0\n0')
+        f.close()
+
+    def __saveDataToFile(self):
+        f = open(FILENAME, 'w')
+        f.write(str(self.__mpg))
+        f.write('\n')
+        f.write(str(self.__muestras))
+        self.__iterations = 0
+        f.close()
+
 
     def getOBDData(self):
         """
@@ -171,22 +192,33 @@ class Smart:
         self.__rpm = str(self.__obd.query(obd.commands.RPM).value.magnitude)
         self.__cool = str(self.__obd.query(obd.commands.COOLANT_TEMP).value.magnitude)
 
-        #self.__fuel += self.__fuelPerS
-        #self.__km += self.__obd.query(obd.commands.DISTANCE_W_MIL).value.magnitude
 
-        self.__fuelPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / ESTEQUIOMETRICA
-        self.__instMPG = self.__fuelPerS / (self.__speed / 36)
-        self.__mpg = ((self.__mpg * self.__muestras + self.__instMPG) / (self.__muestras + 1))
-        self.__muestras += 1
-
+        self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (ESTEQUIOMETRICA * DENSIDAD_G)
+        self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)), 1)
+        if self.__instMPG > 100:
+            self.__instMPG = '---'
+        elif self.__speed > self.__minimumSpeed:
+            self.__mpg = round(((self.__mpg * self.__muestras + self.__instMPG) / (self.__muestras + 1)), 1)
+            self.__muestras += 1
+        if self.__speed < self.__minimumSpeed:
+            self.__saveDataToFile()
 
         if self.__debug:
             print("velocidad " + str(self.__speed))
             print("rpm " + self.__rpm)
             print("coolant " + self.__cool)
+            print("mezcla " + str(self.__LPerS))
+            print("air flow " + str(self.__obd.query(obd.commands.MAF).value.magnitude))
             print("inst mpg " + str(self.__instMPG))
-            print("media mpg " + self.__mpg)
+            print("media mpg " + str(self.__mpg))
 
+    def fuelScreen(self):
+        """
+        Instant fuel with average fuel screen
+        """
+        self.__lcd.clearDisplay()
+        self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(self.__mpg))
+        self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
     def rpmCoolScreen(self):
         """
@@ -222,14 +254,13 @@ class Smart:
             if self.__initialTime == None:
                 self.__initialTime = t.time()
                 self.__lastTime = None
-            else:
-                #Tiempo desde que empezó el contador en seg.
-                self.__lastTime = actualTime - self.__initialTime
-                #Conversion a horas, minutos, segundos
-                h, m, s = self.__timeConvert(self.__lastTime)
-                #Printamos el contador.
-                self.__lcd.clearDisplay()
-                self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
+            #Tiempo desde que empezó el contador en seg.
+            self.__lastTime = actualTime - self.__initialTime
+            #Conversion a horas, minutos, segundos
+            h, m, s = self.__timeConvert(self.__lastTime)
+            #Printamos el contador.
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
 
         #si el boton no esta presionado y habia valor, guardamos last time para que se quede marcado.
         elif self.__initialTime != None:
