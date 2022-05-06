@@ -1,27 +1,42 @@
 ## CuentaRevoluciones
-Cuentarevoluciones hecho con RPi zero W con pantalla lcd 16x2 y rotary-encoder. Funciona mediante OBDII.
+Cuentarrevoluciones hecho con RPi zero W con pantalla lcd 16x2 y rotary-encoder. Funciona mediante OBDII.
 
-### Que es? Como funciona?
-Pantalla para coches sin cuentarevoluciones, que se conecta por el protocolo OBDII (todos los coches a partir de los 2000 tienen).
+### Objetivos
+Mi Smart Fortwo solo tiene cuentarrevoluciones si lo pagas como un extra, el mío no vino con ese extra y no me apetece pagar más por el coche así que decidí hacerme uno basado
+en el puerto OBD-II.
+La idea inicial es solo mostrar las revoluciones del motor pero como veréis, le he metido más cosas.
+ 
+### Qué es? Cómo funciona?
 
-Mediante la librería LCD, podemos mostrar en pantalla todos los datos que escojamos del coche.
+Todo el sistema se ejecuta en una RaspberryPi Zero W (versión con WiFi y Bluetooth).
 
-Mediante la librería Rotary Encoder, podemos interactuar con la pantalla mediante menús.
+La conexión se realiza mediante Bluetooth y el puerto OBD-II del coche. Este puerto se comunica con la ECU del coche y por tanto permite
+sacar parte de sus datos (entre ellos las RPM).
 
-### Cambios
+Para mostrar los datos he utilizado una pantalla LCD de 16x2 pixeles, y un Rotary Encoder para navegar entre distintos menús.
+
+**ADJUNTAR FOTO DE LA PANTALLA MONTADA EN EL COCHE**
+
+### Funciones Actuales
+Actualmente programadas el programa puede mostrar:
+- RPM del motor.
+- Temperatura del Refrigerante.
+- Consumo de gasolina (aproximado gracias al sensor MAF).
+- Tiempo de parada para cuidar el turbo.
+
+### Librerías
 
 #### LCD Library
-	Librería para controlador ST7066U hecha por mí. Al ser más específica que la Adafruit funciona a mayor velocidad.
+Librería para controlador **ST7066U** hecha por mí. Al ser más específica que la Adafruit funciona a mayor velocidad.
 
 #### Rotary encoder Library
-	Le he realizado unos cambios para que funcione con el rotary conectado de GPIO -> GND y he añadido la función de botón para los rotary con botón.
-
+Le he realizado unos cambios para que funcione con el rotary conectado de GPIO -> GND y he añadido la función de un botón para los rotary con botón.
 
 #### Modelos 3D
-	Modelos 3D en formato stl de la caja **Modelos**
+Modelos 3D en formato stl de la caja en carpeta **Modelos**
 
 #### Conexiones:
-	Cableados a la RPi en carpeta **Images**
+Cableados a la RPi en carpeta **Images**
 
 ### Productos:
 - [Librería OBD original](https://github.com/brendan-w/python-OBD)
@@ -31,14 +46,16 @@ Mediante la librería Rotary Encoder, podemos interactuar con la pantalla median
 - [Obd](https://es.aliexpress.com/item/4000809053108.html?spm=a2g0o.productlist.0.0.70e571ackddOMQ&algo_pvid=ea560480-3cf9-416e-9c37-55a7fe459be6&algo_exp_id=ea560480-3cf9-416e-9c37-55a7fe459be6-1&pdp_ext_f=%7B%22sku_id%22%3A%2212000025091114231%22%7D&pdp_pi=-1%3B4.22%3B-1%3B-1%40salePrice%3BEUR%3Bsearch-mainSearch): elm327
 - [Rotativo](https://es.aliexpress.com/item/4000028678187.html?gatewayAdapt=glo2esp&spm=a2g0o.9042311.0.0.274263c0LgHA3h)
 
-### Pruebas:
-Useful to program without having to be in the car.
+### Enlaces de interés OBD:
+Para programarlo todo, he utilizado un OBD-II virtual el cual te ahorra bastante tiempo, ya que no necesitas bajar directamente al coche.
 - [OBD VIRTUAL](https://github.com/Ircama/ELM327-emulator)
+
 OBD II Codes.
-- [OBD PIDs] (https://en.wikipedia.org/wiki/OBD-II_PIDs)
+- [OBD PIDs](https://en.wikipedia.org/wiki/OBD-II_PIDs)
 
 ### Raspberry AP:
-Useful to debug the RPi while it's in the box.
+Este programa permite utilizar la Raspberry como punto de anclaje Wi-Fi y de esta manera poder meter actualizaciones 
+sin necesidad de sacar la Rpi de la caja.
 - [raspberry](https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-routed-wireless-access-point)
 
 ### TODO:

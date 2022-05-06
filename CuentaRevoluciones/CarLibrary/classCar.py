@@ -10,6 +10,8 @@ DENSIDAD_G = 720
 ESTEQUIOMETRICA = 14.7
 #Nombre del archivo donde guardar la media de consumo
 FILENAME = './mpg.dat'
+#Min Throttle position
+THROTTLE = 6
 
 
 class Smart:
@@ -248,7 +250,7 @@ class Smart:
 
         self.__throttle = int(self.__obd.query(obd.commands.THROTTLE_POS).value.magnitude)
         #Estoy acelerando?
-        if self.__throttle > 0:
+        if self.__throttle > THROTTLE:
             #Si voy a velocidad mayor que parada, cuenta consumo.
             if self.__speed > self.__minimumSpeed:
                 #Si mpg guardado en archivo, marca flag.
