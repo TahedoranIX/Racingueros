@@ -1,28 +1,29 @@
-## CuentaRevoluciones
+# CuentaRevoluciones
 Cuentarrevoluciones hecho con RPi zero W con pantalla lcd 16x2 y rotary-encoder. Funciona mediante OBDII.
 
 ### Objetivos
-Mi Smart Fortwo solo tiene cuentarrevoluciones si lo pagas como un extra, el mío no vino con ese extra y no me apetece pagar más por el coche así que decidí hacerme uno basado
-en el puerto OBD-II.
-La idea inicial es solo mostrar las revoluciones del motor pero como veréis, le he metido más cosas.
+Mi Smart Fortwo solo tiene cuentarrevoluciones si lo pagas como un extra, el mío no vino con ese extra y no me apetece pagar más por él así que decidí hacerme uno utilizando el protocolo
+ OBD-II.
+La idea inicial es solo mostrar las revoluciones del motor pero como veréis, he implementado más cosas.
  
 ### Qué es? Cómo funciona?
 
-Todo el sistema se ejecuta en una RaspberryPi Zero W (versión con WiFi y Bluetooth).
+Todo el programa esta escrito en Python3 y ejecutado en una RaspberryPi Zero W (versión con WiFi y Bluetooth).
 
-La conexión se realiza mediante Bluetooth y el puerto OBD-II del coche. Este puerto se comunica con la ECU del coche y por tanto permite
-sacar parte de sus datos (entre ellos las RPM).
+La conexión al puerto OBD se realiza mediante Bluetooth y la librería python-OBD.
 
-Para mostrar los datos he utilizado una pantalla LCD de 16x2 pixeles, y un Rotary Encoder para navegar entre distintos menús.
+La pantalla utilizada es la típica LCD de 16x2 píxeles y adicionalmente utiliza un Rotary encoder para poder navegar entre distintos menús.
 
 **ADJUNTAR FOTO DE LA PANTALLA MONTADA EN EL COCHE**
 
 ### Funciones Actuales
-Actualmente programadas el programa puede mostrar:
+Actualmente el programa puede mostrar:
 - RPM del motor.
 - Temperatura del Refrigerante.
 - Consumo de gasolina (aproximado gracias al sensor MAF).
 - Tiempo de parada para cuidar el turbo.
+
+## Información Adicional
 
 ### Librerías
 
