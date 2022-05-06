@@ -42,10 +42,10 @@ Useful to debug the RPi while it's in the box.
 - [raspberry](https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-routed-wireless-access-point)
 
 ### TODO:
-#### POR HACER:
+#### IDEAS:
 - Calcular el consumo dependiendo de cuanto esta pulsado el pedal de acelerador (variar mezcla esquetiometrica).
-- El boton del cronometro va un poco raro debido a las condiciones de activación.
-- Cambiar libreria del rotary.
 - Boton pulsado 10s, entra en modo debug y el wifi de la raspberry se enciende.
-#### EN PROCESO:
+
+
+#### FASE PRUEBAS:
 - Consumo de gasolina
