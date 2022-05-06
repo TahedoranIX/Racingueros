@@ -158,13 +158,5 @@ class LCD:
 if __name__ == "__main__":
     h = LCD(d4=23,d5=18,d6=15,d7=14,en=24,rs=25)
     h.writeMessage("hola que tal\nyo bien")
-    h.writeMessage("perro")
     sleep(2)
-    """
-    lcd = Adafruit_CharLCD(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, cols=16, lines=2)
-    lcd.clear()
-    lcd.message("hola que tal\nyo bien")
-    lcd.message("perro")
-    sleep(2)
-    lcd.clear()"""
 
