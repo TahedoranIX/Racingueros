@@ -4,9 +4,13 @@ from LCDLibrary.lcdLibrary import LCD
 from RotaryLibrary.encoder import Encoder
 from os.path import exists
 
+#Densidad de la gasolina g/L
 DENSIDAD_G = 720
+#Valor ideal de la mezcla estequiometrica
 ESTEQUIOMETRICA = 14.7
-FILENAME = 'mpg.dat'
+#Nombre del archivo donde guardar la media de consumo
+FILENAME = './mpg.dat'
+
 
 class Smart:
     def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, minimumSpeed, maxRev=5500, minRev=1200, debug=False):
@@ -27,41 +31,68 @@ class Smart:
             minRev: MinRev of car. util RpmScreen
             debug: True/false
         """
-        self.__lcd = LCD(rs=rs, en=en, d4=d4, d5=d5, d6=d6, d7=d7)
+
+        #Puerto conectado OBD.
         self.__port = port
+        #Flag de debug.
         self.__debug = debug
         if self.__debug:
             obd.logger.setLevel(obd.logging.DEBUG)
             print("Starting ConnOBD")
 
         # 1º Stage - Declarations
+            #./LCDLibrary/lcdlibrary.py
+        self.__lcd = LCD(rs=rs, en=en, d4=d4, d5=d5, d6=d6, d7=d7)
+            #./OBDLibrary/obd.py
         self.__obd = self.__connection()
+            #./RotaryLibrary/encoder.py
         self.__encoder = Encoder(e1, e2, eb)
 
         if self.__debug:
             print("rotatorio: ", self.__encoder.getValue())
 
-        #TURBOCARE
+        # TURBOCARE
+            #Comprueba si coche parado.
         self.__stopped = False
+            #Tiempo de espera
         self.__finalTime = None
+            #Velocidad minima para considerar en movimiento.
         self.__minimumSpeed = minimumSpeed
 
-        #RPMSCREEN
-        self.__rpmSegments = int((maxRev-minRev)/16)
+        # RPMSCREEN
+            #Segmentos para mostrar en modo racing.
+        self.__rpmSegments = int((maxRev - minRev) / 16)
+            #Rev minimas para modo racing.
         self.__minRev = minRev
 
-        #TIMESCREEN
-        self.__initialTime = None
-        self.__lastTime = [0,0,0]
+        # TIMESCREEN. DESHABILITADO, DEMASIADOS MENUS.
+        #Tiempo inicial al que sumar segundos.
+        #self.__initialTime = None
+        #Tiempo final de cronometro: h, m, s
+        #self.__lastTime = [0, 0, 0]
 
         # OBD DATA
+            #Velocidad coche
         self.__speed = None
+            #Rev de motor
         self.__rpm = None
+            #Coolant temp.
         self.__cool = None
+            #Acelerador posicion
+        self.__throttle = 0
+            #Load mpg, muestras data from file
         self.__getDataFromFile()
+            #instant mpg
         self.__instMPG = None
+            #maf sensor data
         self.__LPerS = None
 
+        # FUELSCREEN
+        self.__fuelIterations = 0
+
+        # SAVE FILE
+            #flag de guardado en archivo
+        self.__guardado = False
 
     def __del__(self):
         if self.__debug:
@@ -94,57 +125,63 @@ class Smart:
             t.sleep(2)
             return self.__connection()
 
-
-
     def sos(self):
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Connection\nLost')
         self.__obd.close()
         self.__obd = self.__connection()
 
-
     def startTurboCare(self, actualTime):
-        # Estamos por debajo de la velocidad minima?
-        # Si nos acabamos de parar, set finalTime
-        if self.__speed <= self.__minimumSpeed and not self.__stopped:
+        """ Función auxiliar utilizada para turboCare.
+            Set tiempos de inicio para el temporizador.
+        """
+        # Si nos acabamos de parar, set finalTime.
+        if self.__speed <= self.__minimumSpeed and not self.getStopped():
             self.__stopped = True
             self.__finalTime = actualTime + 60
 
             if self.__debug:
                 print("Start timer turbocare")
-
-        elif self.__speed > self.__minimumSpeed and self.__stopped:
+        #Si ya estabamos parados.
+        elif self.__speed > self.__minimumSpeed and self.getStopped():
             self.__stopped = False
 
             if self.__debug:
                 print("Velocidad no suficiente turbocare")
 
-
     def turboCare(self, actualTime):
-        #Si estamos parados, printamos el tiempo que queda y temp refrigerante
+        """
+        Menu
+            COOLANT TEMPERATURE
+            CONTADOR
+        """
+        # Si estamos parados, printamos el tiempo que queda y temp refrigerante
         if self.__stopped:
             time = self.__finalTime - actualTime
             self.__lcd.clearDisplay()
             self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
+            #Si el tiempo ya se ha cumplido, mostrar engine off.
             if time <= 0:
                 self.__lcd.writeMessage('\nEngine OFF')
+            #Si no, mostrar el temporizador.
             else:
                 self.__lcd.writeMessage('\nTime: 00:' + str('{:0>2}'.format(int(time))))
-        #Si se activa el menu pero no estamos parados
+        # Si se activa el menu pero no estamos parados
         else:
             self.__lcd.clearDisplay()
             self.__lcd.writeMessage('Temp: ' + self.__cool + ' C' + '\nEn marcha')
 
-
     def getStopped(self):
         return self.__stopped
 
-
     def getRotatory(self, menu):
         """
-        Check Rotatory state for changing screen
+        Comprueba el giro del encoder.
+        Args:
+            menu: Cantidad de items en menu
 
-        :returns: Screen number
+        Returns:
+            Menu number
         """
         valor = self.__encoder.getValue()
         if valor > (menu - 1):
@@ -158,9 +195,18 @@ class Smart:
         return valor
 
     def getButtonRotatory(self):
+        if self.__debug:
+            print("pulsacion rot: ", self.__encoder.getButtonValue())
         return self.__encoder.getButtonValue()
 
     def __getDataFromFile(self):
+        """
+        Carga datos del archivo.
+        Format:
+            mpg
+            muestras
+        EOF
+        """
         if exists(FILENAME):
             f = open(FILENAME, 'r')
             self.__mpg = float(f.readline())
@@ -174,33 +220,50 @@ class Smart:
         f.close()
 
     def __saveDataToFile(self):
+        """
+        Guarda en archivo el mpg medio.
+        Format:
+            mpg
+            muestras
+        EOF
+        """
         f = open(FILENAME, 'w')
         f.write(str(self.__mpg))
         f.write('\n')
         f.write(str(self.__muestras))
         self.__iterations = 0
+        self.__guardado = True
         f.close()
-
 
     def getOBDData(self):
         """
         Get OBD data
-
-        :returns: Speed, RPM, Coolant, MPG
+        Returns:
+            Speed, RPM, Coolant, MPG
         """
+
         self.__speed = int(self.__obd.query(obd.commands.SPEED).value.magnitude)
         self.__rpm = str(self.__obd.query(obd.commands.RPM).value.magnitude)
         self.__cool = str(self.__obd.query(obd.commands.COOLANT_TEMP).value.magnitude)
 
-
-        self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (ESTEQUIOMETRICA * DENSIDAD_G)
-        self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)), 1)
-        if self.__instMPG > 100:
-            self.__instMPG = '---'
-        elif self.__speed > self.__minimumSpeed:
-            self.__mpg = round(((self.__mpg * self.__muestras + self.__instMPG) / (self.__muestras + 1)), 1)
-            self.__muestras += 1
-        if self.__speed < self.__minimumSpeed:
+        self.__throttle = int(self.__obd.query(obd.commands.THROTTLE_POS).value.magnitude)
+        #Estoy acelerando?
+        if self.__throttle > 0:
+            #Si voy a velocidad mayor que parada, cuenta consumo.
+            if self.__speed > self.__minimumSpeed:
+                #Si mpg guardado en archivo, marca flag.
+                if self.__guardado:
+                    self.__guardado = False
+                self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (ESTEQUIOMETRICA * DENSIDAD_G)
+                self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)), 1)
+                self.__mpg = round(((self.__mpg * self.__muestras + self.__instMPG) / (self.__muestras + 1)), 1)
+                self.__muestras += 1
+            #Si voy a velocidad menor que parada, consumo infinito.
+            else:
+                self.__instMPG = '---'
+        else:
+            self.__instMPG = '0'
+        if self.__speed < self.__minimumSpeed and not self.__guardado:
             self.__saveDataToFile()
 
         if self.__debug:
@@ -214,24 +277,37 @@ class Smart:
 
     def fuelScreen(self):
         """
-        Instant fuel with average fuel screen
+        Menu
+            Instant MPG  Average MPG
+            RPM
         """
+        if self.getButtonRotatory():
+            self.__fuelIterations += 1
+        if self.__fuelIterations == 6:
+            self.__fuelIterations = 0
+            self.__mpg = 0
+            self.__muestras = 0
+            self.__saveDataToFile()
+
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(self.__mpg))
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
     def rpmCoolScreen(self):
         """
-        Rpm with coolant temp screen
+        Menu
+            COOLANT TEMPERATURE
+            RPM
         """
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Temp: ' + self.__cool + ' C')
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
-
     def rpmScreen(self):
         """
-        Rpm with revcounter
+        Menu
+            SEGMENTOS LED
+            RPM
         """
         self.__lcd.clearDisplay()
         actualRpm = int((float(self.__rpm) - self.__minRev) / self.__rpmSegments)
@@ -239,38 +315,43 @@ class Smart:
             print(actualRpm)
             print(self.__rpmSegments)
         while actualRpm > 0:
-            self.__lcd.writeRAM([1,1,1,1,1,1,1,1])
+            self.__lcd.writeRAM([1, 1, 1, 1, 1, 1, 1, 1])
             actualRpm = actualRpm - 1
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
-    def timeScreen(self, actualTime):
-        """
-        StopWatch screen
+    """def timeScreen(self, actualTime):
+        
         :param actualTime: Actual time given by main loop
-        """
-        #Si se ha presionado el botón
-        if self.getButtonRotatory():
-            #Empezamos el contador
-            if self.__initialTime == None:
-                self.__initialTime = t.time()
-                self.__lastTime = None
-            #Tiempo desde que empezó el contador en seg.
-            self.__lastTime = actualTime - self.__initialTime
-            #Conversion a horas, minutos, segundos
-            h, m, s = self.__timeConvert(self.__lastTime)
-            #Printamos el contador.
-            self.__lcd.clearDisplay()
-            self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
-
-        #si el boton no esta presionado y habia valor, guardamos last time para que se quede marcado.
-        elif self.__initialTime != None:
+        Menu
+            TEMPORIZADOR
+            RPM
+        
+        # Si se ha presionado el botón
+        if self.getButtonRotatory() and self.__initialTime is not None:
             self.__initialTime = None
             h, m, s = self.__timeConvert(self.__lastTime)
             self.__lastTime = []
             self.__lastTime[:3] = h, m, s
+
+        elif self.getButtonRotatory() or self.__initialTime is not None:
+            # Empezamos el contador
+            if self.__initialTime is None:
+                self.__initialTime = t.time()
+                self.__lastTime = None
+            # Tiempo desde que empezó el contador en seg.
+            self.__lastTime = actualTime - self.__initialTime
+            # Conversion a horas, minutos, segundos
+            h, m, s = self.__timeConvert(self.__lastTime)
+            # Printamos el contador.
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(h, m, s) + '\nRPM: ' + self.__rpm)
+
+        # si el boton no esta presionado y habia valor, guardamos last time para que se quede marcado.
         else:
             self.__lcd.clearDisplay()
-            self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(self.__lastTime[0], self.__lastTime[1], self.__lastTime[2]) + '\nRPM: ' + self.__rpm)
+            self.__lcd.writeMessage("{:0>2}:{:0>2}:{:0>2}".format(self.__lastTime[0], self.__lastTime[1],
+                                                                  self.__lastTime[2]) + '\nRPM: ' + self.__rpm)
+"""
 
     def __timeConvert(self, sec):
         mins = sec // 60
@@ -278,10 +359,3 @@ class Smart:
         hours = mins // 60
         mins = mins % 60
         return int(hours), int(mins), int(sec)
-
-
-
-
-
-
-

@@ -34,7 +34,18 @@ Mediante la librería Rotary Encoder, podemos interactuar con la pantalla median
 ### Pruebas:
 Useful to program without having to be in the car.
 - [OBD VIRTUAL](https://github.com/Ircama/ELM327-emulator)
+OBD II Codes.
+- [OBD PIDs] (https://en.wikipedia.org/wiki/OBD-II_PIDs)
 
 ### Raspberry AP:
 Useful to debug the RPi while it's in the box.
 - [raspberry](https://www.raspberrypi.com/documentation/computers/configuration.html#setting-up-a-routed-wireless-access-point)
+
+### TODO:
+#### POR HACER:
+- Calcular el consumo dependiendo de cuanto esta pulsado el pedal de acelerador (variar mezcla esquetiometrica).
+- El boton del cronometro va un poco raro debido a las condiciones de activación.
+- Cambiar libreria del rotary.
+- Boton pulsado 10s, entra en modo debug y el wifi de la raspberry se enciende.
+#### EN PROCESO:
+- Consumo de gasolina

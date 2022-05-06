@@ -11,21 +11,20 @@ class Encoder:
         self.buttonPin = buttonPin
         self.valueButton = 0
         self.value = 0
-        self.state = '00'
+        self.state = '11'
         self.direction = None
         self.callback = callback
         GPIO.setup(self.leftPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(self.rightPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(self.buttonPin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(self.leftPin, GPIO.BOTH, callback=self.transitionOccurred)  
+        GPIO.add_event_detect(self.leftPin, GPIO.BOTH, callback=self.transitionOccurred)
         GPIO.add_event_detect(self.rightPin, GPIO.BOTH, callback=self.transitionOccurred)
-        GPIO.add_event_detect(self.buttonPin, GPIO.RISING, callback=self.buttonOccurred)
+        #GPIO.add_event_detect(self.buttonPin, GPIO.FALLING, callback=self.buttonPressed)
 
     def transitionOccurred(self, channel):
         p1 = GPIO.input(self.leftPin)
         p2 = GPIO.input(self.rightPin)
         newState = "{}{}".format(p1, p2)
-
         if self.state == "00": # Resting position
             if newState == "01": # Turned right 1
                 self.direction = "R"
@@ -64,16 +63,16 @@ class Encoder:
                     self.value = self.value + 1
                     if self.callback is not None:
                         self.callback(self.value, self.direction)
-                
+
         self.state = newState
 
-    def buttonOccurred(self, channel):
-        self.valueButton = not self.valueButton
+    #def buttonPressed(self, channel):
+    #    self.valueButton = not self.valueButton
 
 
     def getValue(self):
         return self.value
 
     def getButtonValue(self):
-        return self.valueButton
+        return not GPIO.input(self.buttonPin)
 
