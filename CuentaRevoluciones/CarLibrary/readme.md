@@ -13,4 +13,15 @@ Cada función está debidamente comentada, pero para no adentraros en código, r
 - `getOBDData()`: Función que obtiene todos los valores de OBD, se puede añadir cuantos se quieran, consultar python-OBD docs, para conocer todos los sensores.
 - `fuelScreen()`: Función menu que muestra consumo instantáneo, promedio y las RPM.
 - `rpmCoolScreen()`: Función menu que muestra RPM y Coolant temp.
-- `rpmScreen()`: Función menu que muestra RPM y segments racing. 
+- `rpmScreen()`: Función menu que muestra RPM y segments racing.
+
+### Nota sobre calculo de consumo de combustible
+Debido a que la ECU del Smart no me deja acceder a los inyectores, he aproximado el consumo extrayendo los datos
+del sensor MAF (sensor que indica el caudal de aire que entra en la admisión en gramos/segundo), a partir de ahí
+he supuesto que la ECU hace los cálculos pertinentes para garantizar una mezcla estequiométrica y (mediante un sencillo factor de conversión)
+he podido suponer la cantidad de combustible que se esta inyectando en todo el motor.
+
+$$\textup{gasolina en }\frac{litros}{segundo} = \frac{1\textup{ gramo de aire}}{1 \textup{ segundo}}*\frac{1 \textup{ gramo de gasolina}}{14.7 \textup{ gramos de aire}}*\frac{1 \textup{ litro de gasolina}}{720 \textup{ gramos de gasolina}}$$
+
+Finalmente he tenido en cuenta la posición del acelerador debido a que la mariposa
+de admisión no se cierra por completo nunca y por tanto sin acelerar, había consumo.
