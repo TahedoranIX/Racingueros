@@ -3,10 +3,10 @@ import time as t
 
 MINIMUM_SPEED = 5
 MENU_QUANTITY = 4
-#port = "/dev/rfcomm99"
-port = "/dev/pts/2"
+#port = "/dev/rfcomm99" # Puerto que asignado al OBD
+port = "/dev/pts/2" # Puerto del OBD virtual
 coche = Smart(rs=25, en=24, d4=23, d5=18, d6=15, d7=14, e1=20, e2=16, eb=21, port=port, minimumSpeed=MINIMUM_SPEED, debug=False)
-#coche = Smart(rs=0, en=5, d4=26, d5=19, d6=13, d7=6, e1=20, e2=16, eb=21, port=port, minimumSpeed=MINIMUM_SPEED, debug=False)
+#coche = Smart(rs=0, en=5, d4=26, d5=19, d6=13, d7=6, e1=20, e2=16, eb=21, port=port, minimumSpeed=MINIMUM_SPEED, debug=False) # Configuración para otra raspberry.
 while True:
         try:
             #Tiempo actual.
