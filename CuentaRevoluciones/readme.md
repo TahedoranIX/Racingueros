@@ -1,7 +1,7 @@
 # CuentaRevoluciones
 Cuentarrevoluciones hecho con RPi zero W con pantalla lcd 16x2 y rotary-encoder. Funciona mediante OBDII.
 
-<img src="/Images/apaisado.jpeg" alt="CRR" width="40%"/>
+<img src="./Images/apaisado.jpeg" alt="CRR" width="40%"/>
 
 ### Objetivos
 Mi Smart Fortwo solo tiene cuentarrevoluciones si lo pagas como un extra, el mío no vino con ese extra y no me apetece pagar más por él así que decidí hacerme uno utilizando el protocolo
