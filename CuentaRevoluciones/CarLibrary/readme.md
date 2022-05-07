@@ -15,11 +15,11 @@ Cada función está debidamente comentada, pero para no adentraros en código, r
 - `rpmCoolScreen()`: Función menu que muestra RPM y Coolant temp.
 - `rpmScreen()`: Función menu que muestra RPM y segments racing.
 
-### Nota sobre calculo de consumo de combustible
+### Nota sobre cálculo de consumo de combustible
 Debido a que la ECU del Smart no me deja acceder a los inyectores, he aproximado el consumo extrayendo los datos
 del sensor MAF (sensor que indica el caudal de aire que entra en la admisión en gramos/segundo), a partir de ahí
 he supuesto que la ECU hace los cálculos pertinentes para garantizar una mezcla estequiométrica y (mediante un sencillo factor de conversión)
-he podido suponer la cantidad de combustible que se esta inyectando en todo el motor.
+he podido suponer la cantidad de combustible que se está inyectando en todo el motor.
 
 <img src="../Images/factorConversion.png" alt="Factor de Conversión" width="70%"/>
 
