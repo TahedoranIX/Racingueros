@@ -21,7 +21,7 @@ del sensor MAF (sensor que indica el caudal de aire que entra en la admisión en
 he supuesto que la ECU hace los cálculos pertinentes para garantizar una mezcla estequiométrica y (mediante un sencillo factor de conversión)
 he podido suponer la cantidad de combustible que se esta inyectando en todo el motor.
 
-$$\textup{gasolina en }\frac{litros}{segundo} = \frac{1\textup{ gramo de aire}}{1 \textup{ segundo}}*\frac{1 \textup{ gramo de gasolina}}{14.7 \textup{ gramos de aire}}*\frac{1 \textup{ litro de gasolina}}{720 \textup{ gramos de gasolina}}$$
+<img src="./Images/factorConversion.png" alt="Factor de Conversión" width="40%"/>
 
 Finalmente he tenido en cuenta la posición del acelerador debido a que la mariposa
 de admisión no se cierra por completo nunca y por tanto sin acelerar, había consumo.
