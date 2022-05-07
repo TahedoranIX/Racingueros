@@ -16,8 +16,6 @@ La conexión al puerto OBD se realiza mediante Bluetooth y la librería python-O
 
 La pantalla utilizada es la típica LCD de 16x2 píxeles y adicionalmente utiliza un Rotary encoder para poder navegar entre distintos menús.
 
-**ADJUNTAR FOTO DE LA PANTALLA MONTADA EN EL COCHE**
-
 ### Funciones Actuales
 Actualmente el programa puede mostrar:
 - RPM del motor.
