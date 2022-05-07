@@ -67,7 +67,7 @@ sin necesidad de sacar la Rpi de la caja.
 
 ### TODO:
 #### IDEAS:
-- Calcular el consumo dependiendo de cuanto esta pulsado el pedal de acelerador (variar mezcla esquetiometrica).
+- Calcular el consumo dependiendo de cuanto esta pulsado el pedal de acelerador (variar mezcla estequiométrica).
 - Boton pulsado 10s, entra en modo debug y el wifi de la raspberry se enciende.
 
 
