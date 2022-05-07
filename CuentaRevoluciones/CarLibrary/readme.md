@@ -1,5 +1,6 @@
 # Uso Básico de la Librería
 Cada función está debidamente comentada, pero para no adentraros en código, resumo las funciones. 
+Agradecer a mis amigos Raul y David por la ayuda en la toma de medidas del sensor MAF.
 
 `Declaración: Smart(rs, en, d4, d5, d6, d7, port, e1, e2, eb, minimumSpeed)`
 
@@ -25,3 +26,5 @@ he podido suponer la cantidad de combustible que se está inyectando en todo el 
 
 Finalmente he tenido en cuenta la posición del acelerador debido a que la mariposa
 de admisión no se cierra por completo nunca y por tanto sin acelerar, había consumo.
+
+
