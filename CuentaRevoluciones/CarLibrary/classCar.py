@@ -4,18 +4,15 @@ from LCDLibrary.lcdLibrary import LCD
 from RotaryLibrary.encoder import Encoder
 from os.path import exists
 
-# Densidad de la gasolina g/L
-DENSIDAD_G = 720
-# Valor ideal de la mezcla estequiometrica
-ESTEQUIOMETRICA = 14.7
-# Nombre del archivo donde guardar la media de consumo
-FILENAME = './mpg.dat'
-# Min Throttle position
-THROTTLE_MINIMUM = 6
+
+DENSIDAD_G = 720  # Densidad de la gasolina g/L
+ESTEQUIOMETRICA = 14.7  # Valor ideal de la mezcla estequiométrica
+FILENAME = '/home/pi/CuentaRev/mpg.dat'  # Nombre del archivo donde guardar la media de consumo
+THROTTLE_MINIMUM = 7  # Min Throttle position
 
 
 class Smart:
-    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, minimumSpeed, maxRev=5500, minRev=1200, debug=False):
+    def __init__(self, rs, en, d4, d5, d6, d7, port, e1, e2, eb, minimumSpeed, maxRev=5500, minRev=1200, debug=False, debugOBD=False):
         """
         Args:
             rs: Register Select pin
@@ -37,7 +34,7 @@ class Smart:
         self.__port = port  # Puerto de conexión OBD.
         self.__debug = debug  # Flag de debug.
 
-        if self.__debug:
+        if debugOBD:
             obd.logger.setLevel(obd.logging.DEBUG)
             print("Starting ConnOBD")
 
@@ -70,11 +67,11 @@ class Smart:
         self.__rpm = None  # Rev de motor
         self.__cool = None  # Coolant temp.
         self.__throttlePosition = 0  # Acelerador posicion
-        self.__getDataFromFile()  # Load mpg, muestras data from file
         self.__instMPG = None  # instant mpg
         self.__LPerS = None  # maf sensor data
         self.__mpgMuestras = 0  # var util para calcular la media mpg.
         self.__mpg = 0  # mpg promedio
+        self.__getDataFromFile()  # Load mpg, muestras data from file
 
         # FUELSCREEN
         self.__fuelMPGReset = 0
@@ -102,7 +99,7 @@ class Smart:
                     print("while not connection")
                 self.__lcd.clearDisplay()
                 self.__lcd.writeMessage("Not Connected")
-                t.sleep(2)
+                t.sleep(1)
                 self.__lcd.clearDisplay()
                 self.__lcd.writeMessage("Connecting...")
                 connection = obd.OBD(self.__port, fast=False, timeout=30)
@@ -196,6 +193,7 @@ class Smart:
         if exists(FILENAME):
             f = open(FILENAME, 'r')
             self.__mpg = float(f.readline())
+
             self.__mpgMuestras = float(f.readline())
 
         else:
@@ -215,7 +213,6 @@ class Smart:
         f.write(str(self.__mpg))
         f.write('\n')
         f.write(str(self.__mpgMuestras))
-        self.__iterations = 0
         self.__archivoGuardado = True
         f.close()
 
@@ -241,16 +238,17 @@ class Smart:
 
                 self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (
                             ESTEQUIOMETRICA * DENSIDAD_G)  # Pasamos a de g/s de aire a L/s de gasolina
-                self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)),
-                                       1)  # Calculamos L/100km en base a velocidad y L/s
-                self.__mpg = round(((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1)),
-                                   1)  # Realizamos la media de consumo.
+                self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)), 1)  # Calculamos L/100km en base a velocidad y L/s
+                self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1))  # Realizamos la media de consumo.
                 self.__mpgMuestras += 1
 
             else:  # Si voy a velocidad menor que parada, consumo infinito.
                 self.__instMPG = '---'
         else:
-            self.__instMPG = '0'
+            self.__instMPG = 0.0
+            self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1))   # Realizamos la media de consumo.
+            self.__mpgMuestras += 1
+
         if self.__speed < self.__minimumSpeed and not self.__archivoGuardado:
             self.__saveDataToFile()
 
@@ -263,6 +261,8 @@ class Smart:
             print("air flow: " + str(self.__obd.query(obd.commands.MAF).value.magnitude))
             print("inst mpg: " + str(self.__instMPG))
             print("media mpg: " + str(self.__mpg))
+            print("muestras: " + str(self.__mpgMuestras))
+            print("archivo guardado: " + str(self.__archivoGuardado))
 
     def fuelScreen(self):
         """
@@ -279,8 +279,8 @@ class Smart:
             self.__saveDataToFile()
 
         self.__lcd.clearDisplay()
-        self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(self.__mpg))
-        self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
+        self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(round(self.__mpg, 1)))
+        self.__lcd.writeMessage('\nThrottle: ' + str(self.__throttlePosition))
 
     def rpmCoolScreen(self):
         """
