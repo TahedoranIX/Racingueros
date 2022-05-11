@@ -9,6 +9,7 @@ DENSIDAD_G = 720  # Densidad de la gasolina g/L
 ESTEQUIOMETRICA = 14.7  # Valor ideal de la mezcla estequiométrica
 FILENAME = '/home/pi/CuentaRev/mpg.dat'  # Nombre del archivo donde guardar la media de consumo
 THROTTLE_MINIMUM = 7  # Min Throttle position
+TIEMPO_RESET_CONS = 6  # Tiempo de reinicio de archivo con consumos 6*0.5(main) = 3s
 
 
 class Smart:
@@ -246,8 +247,9 @@ class Smart:
                 self.__instMPG = '---'
         else:
             self.__instMPG = 0.0
-            self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1))   # Realizamos la media de consumo.
-            self.__mpgMuestras += 1
+            if self.__speed > self.__minimumSpeed:
+                self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1))   # Realizamos la media de consumo.
+                self.__mpgMuestras += 1
 
         if self.__speed < self.__minimumSpeed and not self.__archivoGuardado:
             self.__saveDataToFile()
@@ -272,7 +274,7 @@ class Smart:
         """
         if self.getButtonRotatory():
             self.__fuelMPGReset += 1
-        if self.__fuelMPGReset == 6:  # Si el boton del rotatory esta pulsado durante 6*0.5s, se reinician los datos de consumos.
+        if self.__fuelMPGReset == TIEMPO_RESET_CONS:  # Si el boton del rotatory esta pulsado durante 6*0.5s, se reinician los datos de consumos.
             self.__fuelMPGReset = 0
             self.__mpg = 0
             self.__mpgMuestras = 0
@@ -280,7 +282,7 @@ class Smart:
 
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(round(self.__mpg, 1)))
-        self.__lcd.writeMessage('\nThrottle: ' + str(self.__throttlePosition))
+        self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
 
     def rpmCoolScreen(self):
         """
