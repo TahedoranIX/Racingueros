@@ -71,11 +71,12 @@ class Smart:
         self.__LPerS = None  # maf sensor data
         self.__mpgMuestras = 0  # var util para calcular la media mpg.
         self.__mpg = 0  # mpg promedio
+        self.__fuelTank = 0
         self.__getDataFromFile()  # Load mpg, muestras data from file
 
         # FUELSCREEN
         self.__fuelMPGReset = 0
-        self.__fuelTank = 0
+
 
         # SAVE FILE
         # flag de guardado en archivo
@@ -195,7 +196,7 @@ class Smart:
             f = open(FILENAME, 'r')
             self.__mpg = float(f.readline())
             self.__mpgMuestras = float(f.readline())
-            self.__fuelTank = f.readline()
+            self.__fuelTank = float(f.readline())
 
         else:
             f = open(FILENAME, 'x')
@@ -227,8 +228,8 @@ class Smart:
 
                 self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (
                         ESTEQUIOMETRICA * DENSIDAD_G)  # Pasamos a de g/s de aire a L/s de gasolina
-
-                self.__fuelTank -= self.__LPerS  # Restamos la cantidad de combustible que queda.
+                if self.__fuelTank > 0:
+                    self.__fuelTank -= self.__LPerS  # Restamos la cantidad de combustible que queda.
 
                 self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)),
                                        1)  # Calculamos L/100km en base a velocidad y L/s
@@ -321,7 +322,8 @@ class Smart:
 
         self.__lcd.clearDisplay()
         self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(round(self.__mpg, 1)))
-        self.__lcd.writeMessage('\nFuel Tank: ' + str(round(self.__fuelTank, 1)) + '%')
+        self.__lcd.writeMessage('\nFuel Tank: ' + str(round(self.__fuelTank, 1)) + 'L')
+
 
     def __setLiters(self):
         setDisplay = False
@@ -332,8 +334,9 @@ class Smart:
         self.__encoder.value = 0
         while not setDisplay:
             self.__lcd.clearDisplay()
-            self.__lcd.writeMessage('Añadir litros')
+            self.__lcd.writeMessage('Anadir litros')
             self.__lcd.writeMessage('\n' + str(cantidadLitros1) + '.' + str(cantidadLitros2))
+            t.sleep(0.5)
             if not decimal:
                 cantidadLitros1 = self.__encoder.getValue()
             else:
@@ -341,12 +344,14 @@ class Smart:
 
             if self.getButtonRotatory():
                 self.__encoder.value = 0
-                t.sleep(0.5)
                 if decimal:
                     setDisplay = True
                 decimal = True
+
         total = float(str(cantidadLitros1) + '.' + str(cantidadLitros2))
-        self.__fuelTank = total
+        self.__fuelTank += total
+        self.__encoder.value = backupRotary
+        self.__fuelMPGReset = 0
 
 
     """def timeScreen(self, actualTime):
