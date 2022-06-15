@@ -63,7 +63,6 @@ class Smart:
         # self.__lastTime = [0, 0, 0]
 
         # OBD DATA
-
         self.__speed = None  # Velocidad coche
         self.__rpm = None  # Rev de motor
         self.__cool = None  # Coolant temp.
@@ -76,6 +75,7 @@ class Smart:
 
         # FUELSCREEN
         self.__fuelMPGReset = 0
+        self.__fuelTank = 0
 
         # SAVE FILE
         # flag de guardado en archivo
@@ -194,12 +194,12 @@ class Smart:
         if exists(FILENAME):
             f = open(FILENAME, 'r')
             self.__mpg = float(f.readline())
-
             self.__mpgMuestras = float(f.readline())
+            self.__fuelTank = f.readline()
 
         else:
             f = open(FILENAME, 'x')
-            f.write('0\n0')
+            f.write('0\n0\n0')
         f.close()
 
     def __saveDataToFile(self):
@@ -214,8 +214,38 @@ class Smart:
         f.write(str(self.__mpg))
         f.write('\n')
         f.write(str(self.__mpgMuestras))
+        f.write('\n')
+        f.write(str(self.__fuelTank))
         self.__archivoGuardado = True
         f.close()
+
+    def __fuelData(self):
+        if self.__throttlePosition > THROTTLE_MINIMUM:  # Estoy acelerando?
+            if self.__speed > self.__minimumSpeed:  # Si voy a velocidad mayor que parada, cuenta consumo.
+                if self.__archivoGuardado:  # Si mpg guardado en archivo, marca flag.
+                    self.__archivoGuardado = False
+
+                self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (
+                        ESTEQUIOMETRICA * DENSIDAD_G)  # Pasamos a de g/s de aire a L/s de gasolina
+
+                self.__fuelTank -= self.__LPerS  # Restamos la cantidad de combustible que queda.
+
+                self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)),
+                                       1)  # Calculamos L/100km en base a velocidad y L/s
+                self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (
+                            self.__mpgMuestras + 1))  # Realizamos la media de consumo.
+                self.__mpgMuestras += 1
+
+            else:  # Si voy a velocidad menor que parada, consumo infinito.
+                self.__instMPG = '---'
+        else:
+            self.__instMPG = 0.0
+            if self.__speed > self.__minimumSpeed:
+                self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (
+                            self.__mpgMuestras + 1))  # Realizamos la media de consumo.
+                self.__mpgMuestras += 1
+        if self.__speed < self.__minimumSpeed and not self.__archivoGuardado:
+            self.__saveDataToFile()
 
     def getOBDData(self):
         """
@@ -227,32 +257,8 @@ class Smart:
         self.__speed = int(self.__obd.query(obd.commands.SPEED).value.magnitude)
         self.__rpm = str(self.__obd.query(obd.commands.RPM).value.magnitude)
         self.__cool = str(self.__obd.query(obd.commands.COOLANT_TEMP).value.magnitude)
-
         self.__throttlePosition = int(self.__obd.query(obd.commands.THROTTLE_POS).value.magnitude)
-
-        if self.__throttlePosition > THROTTLE_MINIMUM:  # Estoy acelerando?
-
-            if self.__speed > self.__minimumSpeed:  # Si voy a velocidad mayor que parada, cuenta consumo.
-
-                if self.__archivoGuardado:  # Si mpg guardado en archivo, marca flag.
-                    self.__archivoGuardado = False
-
-                self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (
-                            ESTEQUIOMETRICA * DENSIDAD_G)  # Pasamos a de g/s de aire a L/s de gasolina
-                self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)), 1)  # Calculamos L/100km en base a velocidad y L/s
-                self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1))  # Realizamos la media de consumo.
-                self.__mpgMuestras += 1
-
-            else:  # Si voy a velocidad menor que parada, consumo infinito.
-                self.__instMPG = '---'
-        else:
-            self.__instMPG = 0.0
-            if self.__speed > self.__minimumSpeed:
-                self.__mpg = ((self.__mpg * self.__mpgMuestras + self.__instMPG) / (self.__mpgMuestras + 1))   # Realizamos la media de consumo.
-                self.__mpgMuestras += 1
-
-        if self.__speed < self.__minimumSpeed and not self.__archivoGuardado:
-            self.__saveDataToFile()
+        self.__fuelData()
 
         if self.__debug:
             print("velocidad: " + str(self.__speed))
@@ -306,6 +312,42 @@ class Smart:
             self.__lcd.writeRAM([1, 1, 1, 1, 1, 1, 1, 1])
             actualRpm = actualRpm - 1
         self.__lcd.writeMessage('\nRPM: ' + self.__rpm)
+
+    def fuelTankScreen(self):
+        if self.getButtonRotatory():
+            self.__fuelMPGReset += 1
+        if self.__fuelMPGReset == TIEMPO_RESET_CONS:  # Si el boton del rotatory esta pulsado durante 6*0.5s, se reinician los datos de consumos.
+            self.__setLiters()
+
+        self.__lcd.clearDisplay()
+        self.__lcd.writeMessage('Fuel: ' + str(self.__instMPG) + ' ' + str(round(self.__mpg, 1)))
+        self.__lcd.writeMessage('\nFuel Tank: ' + str(round(self.__fuelTank, 1)) + '%')
+
+    def __setLiters(self):
+        setDisplay = False
+        cantidadLitros1 = 0  # Cantidad de litros numero entero
+        cantidadLitros2 = 0  # Cantidad de litros decimales.
+        backupRotary = self.__encoder.getValue()
+        decimal = False
+        self.__encoder.value = 0
+        while not setDisplay:
+            self.__lcd.clearDisplay()
+            self.__lcd.writeMessage('Añadir litros')
+            self.__lcd.writeMessage('\n' + str(cantidadLitros1) + '.' + str(cantidadLitros2))
+            if not decimal:
+                cantidadLitros1 = self.__encoder.getValue()
+            else:
+                cantidadLitros2 = self.__encoder.getValue()
+
+            if self.getButtonRotatory():
+                self.__encoder.value = 0
+                t.sleep(0.5)
+                if decimal:
+                    setDisplay = True
+                decimal = True
+        total = float(str(cantidadLitros1) + '.' + str(cantidadLitros2))
+        self.__fuelTank = total
+
 
     """def timeScreen(self, actualTime):
         
