@@ -221,15 +221,16 @@ class Smart:
         f.close()
 
     def __fuelData(self):
+        self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (
+                ESTEQUIOMETRICA * DENSIDAD_G)  # Pasamos a de g/s de aire a L/s de gasolina
+
+        if self.__fuelTank > 0:  # Si hay litros en el tanque (más estilistico)
+            self.__fuelTank -= self.__LPerS  # Restamos la cantidad de combustible que queda.
+
         if self.__throttlePosition > THROTTLE_MINIMUM:  # Estoy acelerando?
             if self.__speed > self.__minimumSpeed:  # Si voy a velocidad mayor que parada, cuenta consumo.
                 if self.__archivoGuardado:  # Si mpg guardado en archivo, marca flag.
                     self.__archivoGuardado = False
-
-                self.__LPerS = float(self.__obd.query(obd.commands.MAF).value.magnitude) / (
-                        ESTEQUIOMETRICA * DENSIDAD_G)  # Pasamos a de g/s de aire a L/s de gasolina
-                if self.__fuelTank > 0:
-                    self.__fuelTank -= self.__LPerS  # Restamos la cantidad de combustible que queda.
 
                 self.__instMPG = round(self.__LPerS * (360000 / (self.__speed + 0.0000001)),
                                        1)  # Calculamos L/100km en base a velocidad y L/s
